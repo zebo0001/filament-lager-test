@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filament-Lager</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0f172a;
+    --bg2: #1e293b;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.18);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent2: #a78bfa;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, var(--bg2), var(--bg) 60%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    padding: 2rem 1.5rem 3rem 1.5rem;
+  }
+
+  .hero {
+    max-width: 1100px;
+    margin: 0 auto 2rem auto;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: 2.2rem;
+    margin: 0 0 .4rem 0;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p { color: var(--muted); margin: 0; font-size: 1rem; }
+
+  .stats {
+    max-width: 1100px;
+    margin: 1.75rem auto 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: .9rem;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    text-align: center;
+  }
+  .stat .num { font-size: 1.6rem; font-weight: 700; }
+  .stat .num.warn-color { color: var(--warn); }
+  .stat .label { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; margin-top: .2rem; }
+
+  main { max-width: 1100px; margin: 2rem auto 0 auto; }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .panel h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+  .panel h2 a { font-size: .8rem; color: var(--accent); text-decoration: none; font-weight: 400; }
+  .panel h2 a:hover { text-decoration: underline; }
+  .panel p.hint { color: var(--muted); font-size: .82rem; margin: -.5rem 0 1rem 0; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid var(--border); font-size: .9rem; vertical-align: middle; }
+  th { color: var(--muted); font-weight: 500; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+  tr:last-child td { border-bottom: none; }
+
+  .swatch { display: inline-block; width: .8rem; height: .8rem; border-radius: 50%; margin-right: .4rem; vertical-align: middle; border: 1px solid rgba(255,255,255,0.25); }
+  .swatch-icon { display: inline-block; width: 1.1rem; height: 1.1rem; margin-right: .4rem; vertical-align: middle; }
+
+  input[type=text], input[type=number], select {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: .4rem .55rem;
+    font-size: .85rem;
+    width: 100%;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+  .row-actions { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
+  button.btn {
+    background: var(--accent);
+    color: #04222f;
+    border: none;
+    border-radius: 8px;
+    padding: .4rem .7rem;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button.btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+  button.btn.danger { background: var(--danger); color: #2b0b0b; }
+  button.btn.secondary.danger { background: transparent; color: var(--danger); border-color: rgba(248,113,113,.4); }
+  button.btn:hover { filter: brightness(1.08); }
+  button.btn:disabled { opacity: .5; cursor: default; }
+
+  .amount-input { width: 4.5rem; display: inline-block; }
+
+  .muted { color: var(--muted); }
+  .material-badge {
+    display: inline-block;
+    padding: .05rem .4rem;
+    border-radius: 6px;
+    font-size: .7rem;
+    font-weight: 600;
+    background: rgba(167,139,250,.15);
+    color: var(--accent2);
+    margin-left: .35rem;
+    vertical-align: middle;
+  }
+  .empty { color: var(--muted); font-style: italic; padding: 1rem 0; text-align: center; }
+  .badge { display: inline-block; padding: .1rem .5rem; border-radius: 999px; font-size: .7rem; font-weight: 600; }
+  .badge.archived { background: rgba(248,113,113,.15); color: var(--danger); }
+  .badge.low { background: rgba(251,191,36,.15); color: var(--warn); }
+
+  .toast {
+    position: fixed; bottom: 1.25rem; right: 1.25rem;
+    background: #111827; border: 1px solid var(--border);
+    padding: .7rem 1rem; border-radius: 10px; font-size: .85rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    opacity: 0; transform: translateY(10px); transition: all .2s;
+    pointer-events: none; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.err { border-color: var(--danger); color: var(--danger); }
+  .toast.ok { border-color: var(--ok); color: var(--ok); }
+
+  .links {
+    max-width: 1100px;
+    margin: 0 auto 0 auto;
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .link-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .65rem 1.1rem;
+    color: var(--text);
+    text-decoration: none;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    transition: border-color .15s, background .15s;
+  }
+  .link-card:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.07); }
+  .link-card .dot { width: .5rem; height: .5rem; border-radius: 50%; }
+  .link-card.spoolman .dot { background: var(--accent); }
+
+  footer { max-width: 1100px; margin: 2rem auto 0 auto; text-align: center; color: var(--muted); font-size: .8rem; }
+  footer a { color: var(--muted); }
+
+  /* --- Lagerplätze --- */
+  .add-device-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem 1rem;
+    margin-bottom: 1.25rem;
+    align-items: end;
+  }
+  .add-device-form > div { flex: 1 1 140px; min-width: 120px; }
+  .add-device-form .btn-wrap { flex: 0 0 auto; }
+  .add-device-form label {
+    display: block;
+    font-size: .72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: .25rem;
+  }
+  .device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+  }
+  .device-card {
+    background: rgba(0,0,0,0.18);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+  }
+  .device-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .6rem;
+  }
+  .device-card-head .name { font-weight: 600; font-size: .95rem; }
+  .device-card-head .type { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
+  .device-illustration { width: 100%; height: auto; display: block; }
+  .slot-circle { cursor: pointer; transition: filter .1s; }
+  .slot-circle:hover { filter: brightness(1.25); }
+  .slot-reserved { cursor: help; }
+    .spool-name-link, .slot-circle { touch-action: none; }
+    .spool-drag-chip {
+      position: fixed; z-index: 99999; pointer-events: none;
+      display: flex; align-items: center; gap: .5rem;
+      background: rgba(15,15,22,.96); color: #fff; padding: .5rem .85rem .5rem .55rem;
+      border-radius: .6rem; font-size: .95rem; font-weight: 600; transform: translate(-50%, -135%);
+      box-shadow: 0 8px 24px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
+      white-space: nowrap; border: 1.5px solid rgba(255,255,255,.35);
+    }
+    .spool-drag-chip svg { flex: 0 0 auto; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+    .device-card.drop-hover { outline: 2px dashed #4a90d9; outline-offset: 2px; background: rgba(74,144,217,.12); }
+    .panel.drop-hover { outline: 2px dashed #e08a3c; outline-offset: -2px; }
+    .slot-circle.drop-target circle, .slot-circle.drop-target ellipse { stroke: #4a90d9 !important; stroke-width: 3 !important; }
+    .slot-circle.drop-target { filter: drop-shadow(0 0 4px rgba(74,144,217,.9)); }
+    .toast-undo-btn {
+      margin-left: .6rem; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+      color: inherit; padding: .15rem .55rem; border-radius: .35rem; cursor: pointer; font-size: .8rem;
+    }
+    .toast-undo-btn:hover { background: rgba(255,255,255,.28); }
+  .slot-label-text { font-size: 8px; fill: var(--muted); pointer-events: none; }
+  .device-settings {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .75rem;
+    padding-top: .6rem;
+    border-top: 1px solid var(--border);
+    font-size: .75rem;
+  }
+  .device-settings label { color: var(--muted); white-space: nowrap; }
+  .device-settings select, .device-settings input[type=number] { width: auto; min-width: 5rem; padding: .3rem .4rem; font-size: .75rem; }
+  .device-settings .btn { padding: .3rem .55rem; font-size: .72rem; }
+  .ace-feed-note { color: var(--warn); font-size: .72rem; margin-top: .4rem; }
+
+  .assign-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .assign-overlay.show { display: flex; }
+  .assign-box {
+    background: #111827; border: 1px solid var(--border); border-radius: 14px;
+    padding: 1.25rem; width: 100%; max-width: 380px;
+  }
+  .assign-box h3 { margin: 0 0 .3rem 0; font-size: 1rem; }
+  .assign-box p.slot-label { color: var(--muted); font-size: .8rem; margin: 0 0 1rem 0; }
+  .assign-box .row-actions { margin-top: 1rem; justify-content: flex-end; }
+.assign-box.wide { max-width: 640px; }
+.assign-box.scrollable { max-height: 88vh; overflow-y: auto; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1rem; margin-bottom: .75rem; }
+.field-grid .full { grid-column: 1 / -1; }
+.field-grid label { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: .25rem; }
+.section-label { font-size: .78rem; color: var(--text); text-transform: uppercase; letter-spacing: .03em; margin: 1rem 0 .5rem 0; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.section-note { font-size: .75rem; color: var(--muted); margin: -.25rem 0 .6rem 0; }
+.section-note.warn { color: var(--warn); }
+button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1; min-width: 2.1rem; text-align: center; }
+.spool-name-link { cursor: pointer; }
+.spool-name-link:hover { text-decoration: underline; }
+.filament-pick-search { margin-bottom: .4rem; }
+.filament-pick-select { min-height: 7rem; }
+.new-spool-toggle { font-size: .78rem; color: var(--accent); cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; margin-bottom: .75rem; display: inline-block; }
+.db-results { border: 1px solid rgba(255,255,255,.12); border-radius: .4rem; margin-top: .3rem; max-height: 9rem; overflow-y: auto; }
+.db-result-row { padding: .4rem .6rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,.06); font-size: .85rem; }
+.db-result-row:last-child { border-bottom: none; }
+.db-result-row:hover { background: rgba(255,255,255,.08); }
+.db-result-meta { color: var(--muted); font-size: .78rem; }
+.mc-row { display: flex; align-items: center; gap: .4rem; margin-bottom: .3rem; }
+.mc-row input[type="text"] { flex: 1; }
+.mc-swatch { width: 1.2rem; height: 1.2rem; border-radius: 50%; flex: 0 0 auto; border: 1px solid rgba(255,255,255,.25); }
+#ns-multicolor-block label, #sd-multicolor-block label { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin: .5rem 0 .25rem 0; }
+#ns-multicolor-block select, #sd-multicolor-block select { margin-bottom: .5rem; width: 100%; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Filament-Lager</h1>
+  <p>Spulen im Blick &mdash; einchecken, auschecken, Verbrauch buchen, Lagerplätze visualisieren</p>
+</div>
+
+<div class="stats" id="stats">
+  <div class="stat"><div class="num" id="stat-count">&ndash;</div><div class="label">Spulen</div></div>
+  <div class="stat"><div class="num" id="stat-weight">&ndash;</div><div class="label">Rest gesamt</div></div>
+  <div class="stat"><div class="num warn-color" id="stat-low">&ndash;</div><div class="label">Fast leer (&lt;100g)</div></div>
+</div>
+
+<main>
+  <div class="panel">
+    <h2>Spulen <a href="#" id="spoolman-link-top" target="_blank">Spoolman öffnen &rarr;</a> <button class="btn" id="new-spool-btn" type="button">+ Neue Spule</button></h2>
+    <p class="hint">Standort kommt direkt aus den Lagerplätzen &mdash; kein manuelles Eintippen mehr. Über &bdquo;Auf Drucker/ACE&ldquo; bzw. &bdquo;In Drybox&ldquo; wird ein freier Platz zugewiesen (Spoolman-Standort wird automatisch aktualisiert). Ist eine Rolle leer, markiert &bdquo;Rolle leer&ldquo; sie in Spoolman als archiviert, gibt den Platz frei und setzt einen Eintrag auf die Einkaufsliste.</p>
+    <div class="spool-toolbar">
+      <input type="text" id="spool-search" class="spool-search-input" placeholder="Suche: Name, Material, Hersteller, Farbe...">
+    </div>
+    <div id="spool-content"><div class="empty">Lade&hellip;</div></div>
+    <div id="spool-pagination" class="pagination"></div>
+    <style>
+      .spool-toolbar { margin-bottom: .6rem; }
+      .spool-search-input { width: 100%; box-sizing: border-box; padding: .5rem .7rem; border-radius: .4rem; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: inherit; font-size: .9rem; }
+      .spool-search-input:focus { outline: none; border-color: rgba(255,255,255,.4); }
+      .pagination { display: flex; align-items: center; justify-content: center; gap: .4rem; margin-top: .8rem; flex-wrap: wrap; }
+      .pagination button { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.15); color: inherit; padding: .3rem .65rem; border-radius: .35rem; cursor: pointer; font-size: .85rem; }
+      .pagination button:hover:not(:disabled) { background: rgba(255,255,255,.14); }
+      .pagination button.active { background: #4a90d9; border-color: #4a90d9; }
+      .pagination button:disabled { opacity: .35; cursor: default; }
+      .pagination .pg-info { font-size: .8rem; color: var(--muted, #999); margin: 0 .3rem; }
+    </style>
+  </div>
+
+  <div class="panel">
+    <h2>Lagerplätze</h2>
+    <p class="hint">Geräte anlegen (Drybox, ACE, Drucker, &hellip;), bei Bedarf mehrere Reihen pro Ebene angeben (z.&nbsp;B. 2, wenn Spulen hintereinander liegen) und Spulen auf konkrete Plätze legen. Bei Druckern mit ACE-Zuführung kann ein Platz als reserviert markiert werden (bleibt auch bei mehreren gekoppelten ACE-Einheiten über einen Hub an derselben Position). Der Standort wird automatisch zu Spoolman zurückgeschrieben.</p>
+
+    <div class="add-device-form">
+      <div>
+        <label for="dev-name">Name</label>
+        <input type="text" id="dev-name" placeholder="z.B. Drybox">
+      </div>
+      <div>
+        <label for="dev-type">Typ</label>
+        <select id="dev-type">
+          <option value="drybox">Drybox</option>
+          <option value="ace">ACE</option>
+          <option value="printer">Drucker</option>
+          <option value="custom">Sonstiges</option>
+        </select>
+      </div>
+      <div>
+        <label for="dev-levels">Ebenen</label>
+        <input type="number" id="dev-levels" value="1" min="1" step="1">
+      </div>
+      <div>
+        <label for="dev-slots">Plätze/Ebene</label>
+        <input type="number" id="dev-slots" value="4" min="1" step="1">
+      </div>
+      <div>
+        <label for="dev-rows">Reihen/Ebene</label>
+        <input type="number" id="dev-rows" value="1" min="1" step="1">
+      </div>
+      <div id="dev-ace-slot-wrap" style="display:none">
+        <label for="dev-ace-slot">ACE-Zuführung Platz</label>
+        <input type="number" id="dev-ace-slot" placeholder="z.B. 4" min="1" step="1">
+      </div>
+      <div class="btn-wrap">
+        <button class="btn" id="dev-add-btn">Anlegen</button>
+      </div>
+    </div>
+
+    <div id="device-content"><div class="empty">Lade&hellip;</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Einkaufsliste</h2>
+    <p class="hint">Wird automatisch befüllt, wenn eine leere Spule über &bdquo;Rolle leer&ldquo; aus dem System genommen wird. Einträge können hier auch manuell ergänzt oder entfernt werden.</p>
+
+    <div class="add-device-form">
+      <div>
+        <label for="shop-material">Material</label>
+        <input type="text" id="shop-material" placeholder="z.B. PLA">
+      </div>
+      <div>
+        <label for="shop-color">Farbe</label>
+        <input type="text" id="shop-color" placeholder="z.B. Schwarz">
+      </div>
+      <div>
+        <label for="shop-vendor">Hersteller</label>
+        <input type="text" id="shop-vendor" placeholder="z.B. Prusament">
+      </div>
+      <div style="flex:2 1 220px">
+        <label for="shop-note">Notiz</label>
+        <input type="text" id="shop-note" placeholder="optional">
+      </div>
+      <div class="btn-wrap">
+        <button class="btn" id="shop-add-btn">Hinzufügen</button>
+      </div>
+    </div>
+
+    <div id="shopping-content"><div class="empty">Lade&hellip;</div></div>
+  </div>
+</main>
+
+<div class="links">
+  <a class="link-card spoolman" href="#" id="spoolman-link-bottom" target="_blank"><span class="dot"></span>Spoolman (vollständige Oberfläche)</a>
+</div>
+
+<footer>Filament-Lager &middot; Spoolman</footer>
+
+<div class="toast" id="toast"></div>
+
+<div class="assign-overlay" id="assign-overlay">
+  <div class="assign-box">
+    <h3 id="assign-title">Platz zuweisen</h3>
+    <p class="slot-label" id="assign-slot-label"></p>
+    <select id="assign-select"></select>
+    <div class="row-actions">
+      <button class="btn secondary" id="assign-cancel">Abbrechen</button>
+      <button class="btn danger" id="assign-clear">Freimachen</button>
+      <button class="btn" id="assign-save">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="assign-overlay" id="spool-assign-overlay">
+  <div class="assign-box">
+    <h3 id="spool-assign-title">Platz zuweisen</h3>
+    <p class="slot-label" id="spool-assign-spool-label"></p>
+    <select id="spool-assign-select"></select>
+    <div class="row-actions">
+      <button class="btn secondary" id="spool-assign-cancel">Abbrechen</button>
+      <button class="btn" id="spool-assign-save">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="assign-overlay" id="spool-detail-overlay">
+<div class="assign-box wide scrollable">
+<h3 id="spool-detail-title">Spule bearbeiten</h3>
+<p class="slot-label" id="spool-detail-subtitle"></p>
+
+<div class="section-label">Diese Spule</div>
+<div class="field-grid">
+<div><label for="sd-price">Preis (&euro;)</label><input type="number" id="sd-price" step="0.01" min="0"></div>
+<div><label for="sd-initial-weight">Anfangsgewicht (g)</label><input type="number" id="sd-initial-weight" step="1" min="0"></div>
+<div><label for="sd-spool-weight">Leerspulengewicht (g)</label><input type="number" id="sd-spool-weight" step="1" min="0"></div>
+<div><label for="sd-lot-nr">Lot-Nr.</label><input type="text" id="sd-lot-nr"></div>
+<div class="full"><label for="sd-comment">Kommentar</label><input type="text" id="sd-comment"></div>
+</div>
+<div id="sd-extra-fields"></div>
+
+<div class="section-label">
+Filament-Typ
+<button type="button" class="new-spool-toggle" id="sd-filament-toggle">Filament-Typ bearbeiten</button>
+</div>
+<p class="section-note warn">Änderungen hier gelten für <strong>alle</strong> Spulen dieses Filament-Typs, nicht nur diese eine.</p>
+<div class="field-grid" id="sd-filament-fields">
+<div><label for="sd-fil-name">Name</label><input type="text" id="sd-fil-name" disabled></div>
+<div><label for="sd-fil-material">Material</label><input type="text" id="sd-fil-material" disabled></div>
+<div><label for="sd-fil-vendor">Hersteller</label><input type="text" id="sd-fil-vendor" disabled></div>
+<div><label for="sd-fil-color">Farbe (Hex)</label><input type="text" id="sd-fil-color" disabled></div>
+<div class="full">
+<button type="button" class="new-spool-toggle" id="sd-color-mode-toggle" data-mode="single" disabled>Mehrfarbig?</button>
+<div id="sd-multicolor-block" style="display:none">
+<label for="sd-fil-multi-direction">Ausrichtung</label>
+<select id="sd-fil-multi-direction" disabled>
+<option value="longitudinal">L&auml;ngsstreifen (nebeneinander)</option>
+<option value="coaxial">Radial (Ringe/Schichten)</option>
+</select>
+<div id="sd-multicolor-rows"></div>
+<button type="button" class="new-spool-toggle" id="sd-multicolor-add" disabled>+ Farbe hinzuf&uuml;gen</button>
+</div>
+</div>
+<div><label for="sd-fil-diameter">Durchmesser (mm)</label><input type="number" id="sd-fil-diameter" step="0.01" disabled></div>
+<div><label for="sd-fil-density">Dichte (g/cm&sup3;)</label><input type="number" id="sd-fil-density" step="0.01" disabled></div>
+<div><label for="sd-fil-extruder-temp">Drucktemperatur Standard (&deg;C)</label><input type="number" id="sd-fil-extruder-temp" step="1" disabled></div>
+<div><label for="sd-fil-bed-temp">Betttemperatur Standard (&deg;C)</label><input type="number" id="sd-fil-bed-temp" step="1" disabled></div>
+</div>
+
+<div class="row-actions">
+<button class="btn secondary" id="spool-detail-cancel">Abbrechen</button>
+<button class="btn" id="spool-detail-save">Speichern</button>
+</div>
+</div>
+</div>
+
+<div class="assign-overlay" id="new-spool-overlay">
+<div class="assign-box wide scrollable">
+<h3>Neue Spule</h3>
+<p class="slot-label">Bestehenden Filament-Typ w&auml;hlen oder einen neuen anlegen.</p>
+
+<button type="button" class="new-spool-toggle" id="ns-mode-toggle">Neuen Filament-Typ anlegen</button>
+
+<div id="ns-existing-block">
+<div class="section-label">Filament-Typ w&auml;hlen</div>
+<input type="text" class="filament-pick-search" id="ns-filament-search" placeholder="Suche nach Hersteller, Material, Name&hellip;">
+<select id="ns-filament-select" class="filament-pick-select" size="6"></select>
+</div>
+
+<div id="ns-new-block" style="display:none">
+<div class="section-label">Neuer Filament-Typ</div>
+<div class="filament-pick-search">
+<input type="text" id="ns-db-search" placeholder="SpoolmanDB durchsuchen (z.B. Prusament, eSun PLA+&hellip;)">
+<div id="ns-db-results" class="db-results" style="display:none"></div>
+</div>
+<div class="field-grid">
+<div><label for="ns-fil-name">Name</label><input type="text" id="ns-fil-name" placeholder="z.B. Basic Black"></div>
+<div><label for="ns-fil-material">Material</label><input type="text" id="ns-fil-material" placeholder="z.B. PLA"></div>
+<div>
+<label for="ns-fil-vendor-select">Hersteller</label>
+<select id="ns-fil-vendor-select"></select>
+</div>
+<div id="ns-fil-vendor-new-wrap" style="display:none"><label for="ns-fil-vendor-new">Neuer Hersteller</label><input type="text" id="ns-fil-vendor-new" placeholder="Name"></div>
+<div><label for="ns-fil-color">Farbe (Hex, ohne #)</label><input type="text" id="ns-fil-color" placeholder="z.B. FF0000"></div>
+<div class="full">
+<button type="button" class="new-spool-toggle" id="ns-color-mode-toggle" data-mode="single">Mehrfarbig?</button>
+<div id="ns-multicolor-block" style="display:none">
+<label for="ns-fil-multi-direction">Ausrichtung</label>
+<select id="ns-fil-multi-direction">
+<option value="longitudinal">L&auml;ngsstreifen (nebeneinander)</option>
+<option value="coaxial">Radial (Ringe/Schichten)</option>
+</select>
+<div id="ns-multicolor-rows"></div>
+<button type="button" class="new-spool-toggle" id="ns-multicolor-add">+ Farbe hinzuf&uuml;gen</button>
+</div>
+</div>
+<div><label for="ns-fil-diameter">Durchmesser (mm)</label><input type="number" id="ns-fil-diameter" step="0.01" value="1.75"></div>
+<div><label for="ns-fil-density">Dichte (g/cm&sup3;)</label><input type="number" id="ns-fil-density" step="0.01" placeholder="z.B. 1.24"></div>
+<div><label for="ns-fil-extruder-temp">Drucktemperatur Standard (&deg;C)</label><input type="number" id="ns-fil-extruder-temp" step="1"></div>
+<div><label for="ns-fil-bed-temp">Betttemperatur Standard (&deg;C)</label><input type="number" id="ns-fil-bed-temp" step="1"></div>
+</div>
+</div>
+
+<div class="section-label">Diese Spule</div>
+<div class="field-grid">
+<div><label for="ns-price">Preis (&euro;)</label><input type="number" id="ns-price" step="0.01" min="0"></div>
+<div><label for="ns-initial-weight">Anfangsgewicht (g)</label><input type="number" id="ns-initial-weight" step="1" min="0" value="1000"></div>
+<div><label for="ns-spool-weight">Leerspulengewicht (g)</label><input type="number" id="ns-spool-weight" step="1" min="0"></div>
+<div><label for="ns-lot-nr">Lot-Nr.</label><input type="text" id="ns-lot-nr"></div>
+</div>
+<div id="ns-extra-fields"></div>
+
+<div class="row-actions">
+<button class="btn secondary" id="new-spool-cancel">Abbrechen</button>
+<button class="btn" id="new-spool-save">Spule anlegen</button>
+</div>
+</div>
+</div>
+<script>
+const SP = '/api/spoolman';
+const ST = '/api/storage';
+
+function toast(msg, kind) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast', 2500);
+}
+
+async function api(url, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({'Content-Type': 'application/json'}, opts.headers || {});
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    let detail = '';
+    try { detail = await res.text(); } catch(e) {}
+    throw new Error('HTTP ' + res.status + (detail ? ': ' + detail.slice(0,200) : ''));
+  }
+  const ct = res.headers.get('content-type') || '';
+  const text = await res.text();
+  if (!text) return null;
+  if (ct.includes('application/json')) {
+    try { return JSON.parse(text); } catch (e) { return null; }
+  }
+  return null;
+}
+
+function updateStats(spools) {
+  const active = spools.filter(s => !s.archived);
+  const totalWeight = active.reduce((sum, s) => sum + (s.remaining_weight || 0), 0);
+  const lowCount = active.filter(s => s.remaining_weight != null && s.remaining_weight < 100).length;
+  document.getElementById('stat-count').textContent = active.length;
+  document.getElementById('stat-weight').textContent = Math.round(totalWeight) + ' g';
+  document.getElementById('stat-low').textContent = lowCount;
+}
+
+// ---------- Lagerplätze (Rohdaten, global) ----------
+let allUnits = [];
+
+function unitSlotLabel(unit, slot) {
+  return unit.levels > 1
+    ? unit.name + ' · Ebene ' + (slot.level + 1) + ' · Platz ' + (slot.position + 1)
+    : unit.name + ' · Platz ' + (slot.position + 1);
+}
+
+function findSlotForSpool(spoolId) {
+  for (const u of allUnits) {
+    for (const s of u.slots) {
+      if (s.spool_id === spoolId) return { unit: u, slot: s };
+    }
+  }
+  return null;
+}
+
+// ---------- Spoolman ----------
+let allSpools = [];
+let spoolSearchText = '';
+let spoolPage = 1;
+const SPOOL_PAGE_SIZE = 20;
+
+async function loadSpools() {
+  const el = document.getElementById('spool-content');
+  try {
+    const spools = await api(SP + '/spool');
+    allSpools = spools;
+    updateStats(spools);
+    spoolPage = 1;
+    renderSpoolTable();
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Fehler beim Laden: ' + e.message + '</div>';
+  }
+}
+
+function spoolMatchesSearch(s, q) {
+  if (!q) return true;
+  const f = s.filament || {};
+  const vendor = f.vendor ? f.vendor.name : '';
+  const haystack = [vendor, f.name, f.material, f.color_hex, String(s.id)].filter(Boolean).join(' ').toLowerCase();
+  return haystack.includes(q);
+}
+
+function renderSpoolTable() {
+  const el = document.getElementById('spool-content');
+  const pagEl = document.getElementById('spool-pagination');
+  const q = spoolSearchText.trim().toLowerCase();
+
+  if (!allSpools.length) {
+    el.innerHTML = '<div class="empty">Keine Spulen erfasst. Neue Spulen bitte in Spoolman anlegen.</div>';
+    if (pagEl) pagEl.innerHTML = '';
+    return;
+  }
+
+  const filtered = allSpools.filter(s => spoolMatchesSearch(s, q));
+
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty">Keine Spulen gefunden fuer &bdquo;' + spoolSearchText + '&ldquo;.</div>';
+    if (pagEl) pagEl.innerHTML = '';
+    return;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / SPOOL_PAGE_SIZE));
+  if (spoolPage > totalPages) spoolPage = totalPages;
+  if (spoolPage < 1) spoolPage = 1;
+  const startIdx = (spoolPage - 1) * SPOOL_PAGE_SIZE;
+  const pageItems = filtered.slice(startIdx, startIdx + SPOOL_PAGE_SIZE);
+
+  let rows = pageItems.map(s => {
+    const f = s.filament || {};
+    const vendor = f.vendor ? f.vendor.name : '';
+    const mcHexes = f.multi_color_hexes ? f.multi_color_hexes.split(',').map(x => x.trim()).filter(Boolean) : [];
+    const flatColor = f.color_hex ? '#' + f.color_hex : '#888';
+    const swatchSvg = '<svg class="swatch-icon" width="18" height="18" viewBox="0 0 18 18">' + spoolIconMarkup(9, 9, 7.5, 23.6, flatColor, mcHexes, f.multi_color_direction) + '</svg>';
+    const name = (vendor ? vendor + ' ' : '') + (f.name || ('Filament #' + f.id));
+    const material = f.material || '';
+    const remaining = (s.remaining_weight != null) ? Math.round(s.remaining_weight) + ' g' : '–';
+    const archived = s.archived;
+    const low = s.remaining_weight != null && s.remaining_weight < 100 && !archived;
+    const found = findSlotForSpool(s.id);
+    const locLabel = found ? unitSlotLabel(found.unit, found.slot) : null;
+    return '<tr data-id="' + s.id + '">' +
+      '<td>' + swatchSvg + '<span class="spool-name-link" data-id="' + s.id + '">' + name + '</span>' +
+        (material ? ' <span class="material-badge">' + material + '</span>' : '') +
+        (archived ? ' <span class="badge archived">archiviert</span>' : '') +
+        (low ? ' <span class="badge low">fast leer</span>' : '') +
+      '</td>' +
+      '<td>' + remaining + '</td>' +
+      '<td>' + (locLabel ? locLabel : '<span class="muted">&ndash;</span>') + '</td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<button class="btn secondary chk-printer" title="Auf freien Drucker- oder ACE-Platz legen">Auf Drucker/ACE</button>' +
+          '<button class="btn secondary chk-drybox" title="Zurück in eine Drybox legen">In Drybox</button>' +
+          (found ? '<button class="btn secondary danger icon-only chk-clear" title="Vom aktuellen Platz entfernen">&#9167;</button>' : '') +
+          '<button class="btn secondary danger chk-retire" title="Rolle ist leer &mdash; archivieren &amp; auf Einkaufsliste">Rolle leer</button>' +
+        '</div>' +
+      '</td>' +
+      '<td>' +
+        '<div class="row-actions">' +
+          '<input type="number" class="amount-input use-amount" placeholder="g" min="0" step="0.1">' +
+          '<button class="btn use-save">Verbrauch buchen</button>' +
+        '</div>' +
+      '</td>' +
+      '</tr>';
+  }).join('');
+
+  el.innerHTML = '<table><thead><tr><th>Filament</th><th>Rest</th><th>Standort</th><th>Ein-/Auschecken</th><th>Verbrauch</th></tr></thead><tbody>' + rows + '</tbody></table>';
+
+  el.querySelectorAll('tbody tr').forEach(tr => {
+    const id = parseInt(tr.dataset.id, 10);
+    tr.querySelector('.spool-name-link').addEventListener('click', () => openSpoolDetail(id));
+    tr.querySelector('.chk-printer').addEventListener('click', () => openSpoolAssignDialog(id, ['printer', 'ace']));
+    tr.querySelector('.chk-drybox').addEventListener('click', () => openSpoolAssignDialog(id, ['drybox']));
+    const clearBtn = tr.querySelector('.chk-clear');
+    if (clearBtn) clearBtn.addEventListener('click', () => clearSpoolSlot(id));
+    tr.querySelector('.chk-retire').addEventListener('click', () => retireSpool(id));
+    tr.querySelector('.use-save').addEventListener('click', () => bookUsage(id, tr.querySelector('.use-amount').value));
+  });
+
+  renderSpoolPagination(pagEl, spoolPage, totalPages, filtered.length);
+}
+
+function renderSpoolPagination(pagEl, page, totalPages, totalItems) {
+  if (!pagEl) return;
+  if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+  let html = '';
+  html += '<button class="pg-prev" ' + (page <= 1 ? 'disabled' : '') + '>&larr; Zurück</button>';
+  const maxButtons = 7;
+  let startP = Math.max(1, page - 3);
+  let endP = Math.min(totalPages, startP + maxButtons - 1);
+  startP = Math.max(1, endP - maxButtons + 1);
+  for (let p = startP; p <= endP; p++) {
+    html += '<button class="pg-num' + (p === page ? ' active' : '') + '" data-page="' + p + '">' + p + '</button>';
+  }
+  html += '<button class="pg-next" ' + (page >= totalPages ? 'disabled' : '') + '>Weiter &rarr;</button>';
+  html += '<span class="pg-info">' + totalItems + ' Spule' + (totalItems === 1 ? '' : 'n') + ', Seite ' + page + '/' + totalPages + '</span>';
+  pagEl.innerHTML = html;
+
+  const prevBtn = pagEl.querySelector('.pg-prev');
+  if (prevBtn) prevBtn.addEventListener('click', () => { spoolPage--; renderSpoolTable(); });
+  const nextBtn = pagEl.querySelector('.pg-next');
+  if (nextBtn) nextBtn.addEventListener('click', () => { spoolPage++; renderSpoolTable(); });
+  pagEl.querySelectorAll('.pg-num').forEach(btn => {
+    btn.addEventListener('click', () => { spoolPage = parseInt(btn.dataset.page, 10); renderSpoolTable(); });
+  });
+}
+
+async function bookUsage(id, grams) {
+  const g = parseFloat(grams);
+  if (!g || g <= 0) { toast('Bitte Grammzahl angeben', 'err'); return; }
+  try {
+    await api(SP + '/spool/' + id + '/use', { method: 'PUT', body: JSON.stringify({ use_weight: g }) });
+    toast('Verbrauch gebucht: ' + g + ' g', 'ok');
+    loadSpools();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+}
+
+async function clearSpoolSlot(spoolId) {
+  const found = findSlotForSpool(spoolId);
+  if (!found) return;
+  try {
+    await api(ST + '/slots/' + found.slot.id, { method: 'PUT', body: JSON.stringify({ spool_id: null }) });
+    toast('Platz freigegeben', 'ok');
+    await loadDevices();
+    await loadSpools();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+}
+
+async function retireSpool(id) {
+  if (!confirm('Spule wirklich als leer markieren? Sie wird in Spoolman archiviert, der Lagerplatz freigegeben und ein Eintrag auf die Einkaufsliste gesetzt.')) return;
+  const spool = spoolById(id);
+  try {
+    const found = findSlotForSpool(id);
+    if (found) {
+      await api(ST + '/slots/' + found.slot.id, { method: 'PUT', body: JSON.stringify({ spool_id: null }) });
+    }
+    await api(SP + '/spool/' + id, { method: 'PATCH', body: JSON.stringify({ archived: true }) });
+    const f = spool ? (spool.filament || {}) : {};
+    const vendor = f.vendor ? f.vendor.name : null;
+    await api(ST + '/shopping-list', {
+      method: 'POST',
+      body: JSON.stringify({
+        material: f.material || null,
+        color_name: f.name || null,
+        color_hex: f.color_hex || null,
+        vendor: vendor,
+        note: null
+      })
+    });
+    toast('Rolle als leer markiert & auf Einkaufsliste gesetzt', 'ok');
+    await loadDevices();
+    await loadSpools();
+    await loadShoppingList();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+}
+
+// ---------- Lagerplätze ----------
+function spoolLabel(s) {
+  const f = s.filament || {};
+  const vendor = f.vendor ? f.vendor.name : '';
+  const name = (vendor ? vendor + ' ' : '') + (f.name || ('Filament #' + f.id));
+  const material = f.material ? ' (' + f.material + ')' : '';
+  return name + material;
+}
+
+function spoolById(id) {
+  return allSpools.find(s => s.id === id);
+}
+
+function svgFrame(unit, levelHeight) {
+  const w = 400;
+  const h = levelHeight * unit.levels + 30;
+  let parts = [];
+  if (unit.type === 'drybox') {
+    parts.push(`<rect x="4" y="4" width="${w-8}" height="14" rx="4" fill="#8a5a34"/>`);
+    parts.push(`<rect x="4" y="18" width="${w-8}" height="${h-22}" rx="6" fill="#2b2f36" stroke="#454b55" stroke-width="2"/>`);
+    for (let lvl = 1; lvl < unit.levels; lvl++) {
+      const y = 18 + lvl * levelHeight;
+      parts.push(`<line x1="8" y1="${y}" x2="${w-8}" y2="${y}" stroke="#454b55" stroke-width="2"/>`);
+    }
+  } else if (unit.type === 'ace') {
+    parts.push(`<rect x="4" y="4" width="${w-8}" height="${h-8}" rx="20" fill="#3a3f4a" stroke="#4b5563" stroke-width="2"/>`);
+    parts.push(`<rect x="14" y="12" width="${w-28}" height="${Math.min(28, h*0.35)}" rx="12" fill="#20242c" opacity=".55"/>`);
+  } else if (unit.type === 'printer') {
+    parts.push(`<rect x="4" y="4" width="${w-8}" height="${h-8}" rx="14" fill="#4b5563" stroke="#6b7280" stroke-width="2"/>`);
+    parts.push(`<rect x="20" y="12" width="${w-40}" height="10" rx="5" fill="#9ca3af" opacity=".6"/>`);
+  } else {
+    parts.push(`<rect x="4" y="4" width="${w-8}" height="${h-8}" rx="10" fill="#2b2f36" stroke="#454b55" stroke-width="2"/>`);
+  }
+  return { svgOpen: `<svg class="device-illustration" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`, bg: parts.join(''), w, h };
+}
+
+// Berechnet Spaltenzahl/Radius/Reihenabstand innerhalb einer Ebene, abhängig von rows_per_level.
+// Plätze werden reihenweise durchnummeriert: Position 0..perRow-1 = Reihe 1 (vorne),
+// perRow..2*perRow-1 = Reihe 2 (hinten) usw. Reihen werden als schlichte, gleich große
+// Reihen übereinander gestapelt (kein Tiefen-/Verjüngungseffekt) und nur gezeichnet,
+// wenn rows_per_level tatsächlich > 1 ist.
+function computeLevelDims(unit) {
+  const w = 400;
+  const rows = Math.max(1, unit.rows_per_level || 1);
+  const perRow = Math.max(1, Math.ceil((unit.slots_per_level || 1) / rows));
+  const baseR = Math.max(11, Math.min(18, (w / (perRow + 1)) / 2 - 5));
+  const iconH = baseR * 3.15;
+  const rowGap = iconH + 16;
+  const levelHeight = rows * rowGap + 16;
+  return { w, rows, perRow, baseR, iconH, rowGap, levelHeight };
+}
+
+// Spulen-Icon als Kapsel-Silhouette (Anycubic-App-Referenz): heller Flansch-Rand oben,
+// dunkler Schatten unten, Glanzstreifen links -- flache Farben statt Farbverlauf.
+function spoolIconMarkup(cx, cy, r, h, color, multiColors, direction) {
+  const rx = r;
+  const ry = r * 0.82;
+  const bx = rx * 0.8;
+  const by = ry * 0.8;
+  const hubRx = r * 0.34;
+  const hubRy = ry * 0.34;
+  const holeRx = r * 0.13;
+  const holeRy = ry * 0.13;
+  let bodyMarkup = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#e2e8f0"/>`;
+  if (multiColors && multiColors.length >= 2) {
+    const clipId = 'spoolclip-' + Math.round(cx) + '-' + Math.round(cy);
+    const n = multiColors.length;
+    let fills;
+    if (direction === 'coaxial') {
+      fills = multiColors.map((c, i) => {
+        const f = 1 - i / n;
+        return `<ellipse cx="${cx}" cy="${cy}" rx="${bx * f}" ry="${by * f}" fill="#${c}"/>`;
+      }).join('');
+    } else {
+      const gradId = 'spoolgrad-' + Math.round(cx) + '-' + Math.round(cy);
+      const stops = multiColors.map((c, i) => {
+        const pct = (i / (n - 1) * 100).toFixed(1);
+        return `<stop offset="${pct}%" stop-color="#${c}"/>`;
+      }).join('');
+      fills =
+        `<linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">${stops}</linearGradient>` +
+        `<rect x="${cx - bx}" y="${cy - by}" width="${bx * 2}" height="${by * 2}" fill="url(#${gradId})"/>`;
+    }
+    bodyMarkup +=
+      `<clipPath id="${clipId}"><ellipse cx="${cx}" cy="${cy}" rx="${bx}" ry="${by}"/></clipPath>` +
+      `<g clip-path="url(#${clipId})">${fills}</g>` +
+      `<ellipse cx="${cx}" cy="${cy}" rx="${bx}" ry="${by}" fill="none" stroke="rgba(0,0,0,.35)" stroke-width="1"/>`;
+  } else {
+    bodyMarkup += `<ellipse cx="${cx}" cy="${cy}" rx="${bx}" ry="${by}" fill="${color}" stroke="rgba(0,0,0,.35)" stroke-width="1"/>`;
+  }
+  return (
+    bodyMarkup +
+    `<ellipse cx="${cx - bx * 0.22}" cy="${cy - by * 0.3}" rx="${bx * 0.42}" ry="${by * 0.3}" fill="rgba(255,255,255,.22)"/>` +
+    `<ellipse cx="${cx}" cy="${cy}" rx="${hubRx}" ry="${hubRy}" fill="#5f5e5a" stroke="rgba(0,0,0,.3)" stroke-width="0.75"/>` +
+    `<ellipse cx="${cx}" cy="${cy}" rx="${holeRx}" ry="${holeRy}" fill="#20242c"/>`
+  );
+}
+
+function emptySlotMarkup(cx, cy, r, h) {
+  const rx = r;
+  const ry = r * 0.82;
+  return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+}
+
+function renderDeviceCard(unit) {
+  const dims = computeLevelDims(unit);
+  const frame = svgFrame(unit, dims.levelHeight);
+  let slotEls = [];
+
+  for (let lvl = 0; lvl < unit.levels; lvl++) {
+    const levelTop = 18 + dims.levelHeight * lvl;
+
+    const levelSlots = unit.slots.filter(s => s.level === lvl).sort((a, b) => a.position - b.position);
+    levelSlots.forEach(slot => {
+      const rowIdx = Math.floor(slot.position / dims.perRow);
+      const colIdx = slot.position % dims.perRow;
+      const cx = (dims.w / (dims.perRow + 1)) * (colIdx + 1);
+      const cy = levelTop + dims.rowGap * rowIdx + dims.rowGap / 2;
+      const r = dims.baseR;
+      const h = dims.iconH;
+      const isAceReserved = unit.type === 'printer' && unit.ace_feed_slot && (slot.position + 1) === unit.ace_feed_slot;
+      const slotLabelTxt = unitSlotLabel(unit, slot);
+
+      if (isAceReserved) {
+        const ax = cx - r, ay = cy - h / 2, arx = r * 0.55;
+        slotEls.push(
+          `<g class="slot-reserved" data-slot-id="${slot.id}">` +
+          `<title>${slotLabelTxt}: für ACE-Zuführung reserviert</title>` +
+          `<rect x="${ax}" y="${ay}" width="${2*r}" height="${h}" rx="${arx}" fill="rgba(148,163,184,.14)" stroke="rgba(148,163,184,.35)" stroke-width="1.5"/>` +
+          `<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="${Math.max(8, r*0.55)}" fill="#94a3b8" style="pointer-events:none">ACE</text>` +
+          `</g>`
+        );
+        return;
+      }
+
+      const spool = slot.spool_id ? spoolById(slot.spool_id) : null;
+      const f = spool ? (spool.filament || {}) : {};
+      const mcHexesIcon = spool && f.multi_color_hexes ? f.multi_color_hexes.split(',').map(x => x.trim()).filter(Boolean) : [];
+      const color = spool && f.color_hex ? '#' + f.color_hex : null;
+      const hasColorIcon = color || mcHexesIcon.length >= 2;
+
+      let titleText, bodyMarkup;
+      if (hasColorIcon) {
+        titleText = `${slotLabelTxt}: ${spoolLabel(spool)}` + (spool.remaining_weight != null ? ` · ${Math.round(spool.remaining_weight)} g` : '');
+        bodyMarkup = spoolIconMarkup(cx, cy, r, h, color, mcHexesIcon, f.multi_color_direction);
+      } else {
+        titleText = `${slotLabelTxt}: leer`;
+        bodyMarkup = emptySlotMarkup(cx, cy, r, h);
+      }
+      slotEls.push(
+        `<g class="slot-circle" data-slot-id="${slot.id}">` +
+        `<title>${titleText}</title>` +
+        bodyMarkup +
+        `</g>`
+      );
+    });
+  }
+
+  const svg = frame.svgOpen + frame.bg + slotEls.join('') + '</svg>';
+  const occupied = unit.slots.filter(s => s.spool_id).length;
+  const rowsTag = dims.rows > 1 ? ' &middot; ' + dims.rows + ' Reihen/Ebene' : '';
+  const aceTag = (unit.type === 'printer' && unit.ace_feed_slot) ? (' &middot; ACE an Platz ' + unit.ace_feed_slot) : '';
+
+  return '<div class="device-card" data-unit-id="' + unit.id + '">' +
+    '<div class="device-card-head">' +
+      '<div><div class="name">' + unit.name + '</div><div class="type">' + unit.type + ' &middot; ' + occupied + '/' + unit.slots.length + ' belegt' + rowsTag + aceTag + '</div></div>' +
+      '<button class="btn secondary danger dev-delete" data-unit-id="' + unit.id + '" title="Gerät löschen">&times;</button>' +
+    '</div>' +
+    svg +
+    renderDeviceSettings(unit) +
+  '</div>';
+}
+
+function renderDeviceSettings(unit) {
+  let html = '<div class="device-settings" data-unit-id="' + unit.id + '">' +
+    '<label>Reihen/Ebene</label>' +
+    '<input type="number" class="dev-rows-input" min="1" step="1" value="' + (unit.rows_per_level || 1) + '">' +
+    '<button class="btn secondary dev-rows-save">Speichern</button>';
+  if (unit.type === 'printer') {
+    html += '<label>ACE-Zuführung Platz</label>' +
+      '<input type="number" class="dev-ace-input" min="1" max="' + unit.slots_per_level + '" placeholder="keine" value="' + (unit.ace_feed_slot || '') + '">' +
+      '<button class="btn secondary dev-ace-save">Speichern</button>';
+  }
+  html += '</div>';
+  if (unit.type === 'printer' && unit.ace_feed_slot) {
+    html += '<div class="ace-feed-note">Platz ' + unit.ace_feed_slot + ' ist für die ACE-Zuführung reserviert und nicht belegbar &mdash; bleibt auch bei mehreren über einen Hub gekoppelten ACE-Einheiten an dieser einen Position.</div>';
+  }
+  return html;
+}
+
+async function loadDevices() {
+  const el = document.getElementById('device-content');
+  try {
+    const units = await api(ST + '/units');
+    allUnits = units;
+    if (!units.length) {
+      el.innerHTML = '<div class="empty">Noch keine Geräte angelegt. Oben ein Gerät hinzufügen (z.&nbsp;B. Drybox mit 3 Ebenen &agrave; 10 Plätzen).</div>';
+      return;
+    }
+    el.innerHTML = '<div class="device-grid">' + units.map(renderDeviceCard).join('') + '</div>';
+
+    el.querySelectorAll('.slot-circle').forEach(g => {
+      g.addEventListener('click', () => openAssignDialog(parseInt(g.dataset.slotId, 10), units));
+    });
+    el.querySelectorAll('.slot-reserved').forEach(g => {
+      g.addEventListener('click', () => toast('Dieser Platz ist für die ACE-Zuführung reserviert', 'err'));
+    });
+    el.querySelectorAll('.dev-delete').forEach(b => {
+      b.addEventListener('click', async () => {
+        if (!confirm('Gerät wirklich löschen? Alle Platzzuordnungen gehen verloren (Spulen selbst bleiben in Spoolman erhalten).')) return;
+        try {
+          await api(ST + '/units/' + b.dataset.unitId, { method: 'DELETE' });
+          toast('Gerät gelöscht', 'ok');
+          loadDevices();
+        } catch (e) {
+          toast('Fehler: ' + e.message, 'err');
+        }
+      });
+    });
+    el.querySelectorAll('.device-settings').forEach(row => {
+      const unitId = row.dataset.unitId;
+      const rowsSave = row.querySelector('.dev-rows-save');
+      if (rowsSave) {
+        rowsSave.addEventListener('click', async () => {
+          const rowsPerLevel = parseInt(row.querySelector('.dev-rows-input').value, 10) || 1;
+          try {
+            await api(ST + '/units/' + unitId, { method: 'PATCH', body: JSON.stringify({ rows_per_level: rowsPerLevel }) });
+            toast('Reihen/Ebene gespeichert', 'ok');
+            loadDevices();
+          } catch (e) {
+            toast('Fehler: ' + e.message, 'err');
+          }
+        });
+      }
+      const aceSave = row.querySelector('.dev-ace-save');
+      if (aceSave) {
+        aceSave.addEventListener('click', async () => {
+          const raw = row.querySelector('.dev-ace-input').value;
+          const body = raw ? { ace_feed_slot: parseInt(raw, 10) } : { clear_ace_feed_slot: true };
+          try {
+            await api(ST + '/units/' + unitId, { method: 'PATCH', body: JSON.stringify(body) });
+            toast('ACE-Zuführung gespeichert', 'ok');
+            loadDevices();
+          } catch (e) {
+            toast('Fehler: ' + e.message, 'err');
+          }
+        });
+      }
+    });
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Fehler beim Laden: ' + e.message + '</div>';
+  }
+}
+
+const devTypeEl = document.getElementById('dev-type');
+const aceSlotWrapEl = document.getElementById('dev-ace-slot-wrap');
+function syncAceSlotVisibility() {
+  aceSlotWrapEl.style.display = devTypeEl.value === 'printer' ? '' : 'none';
+}
+devTypeEl.addEventListener('change', syncAceSlotVisibility);
+syncAceSlotVisibility();
+
+document.getElementById('dev-add-btn').addEventListener('click', async () => {
+  const name = document.getElementById('dev-name').value.trim();
+  const type = document.getElementById('dev-type').value;
+  const levels = parseInt(document.getElementById('dev-levels').value, 10) || 1;
+  const slots = parseInt(document.getElementById('dev-slots').value, 10) || 1;
+  const rowsPerLevel = parseInt(document.getElementById('dev-rows').value, 10) || 1;
+  const aceSlotRaw = document.getElementById('dev-ace-slot').value;
+  const aceFeedSlot = (type === 'printer' && aceSlotRaw) ? parseInt(aceSlotRaw, 10) : null;
+  if (!name) { toast('Bitte Namen angeben', 'err'); return; }
+  if (slots % rowsPerLevel !== 0) { toast('Plätze/Ebene müssen durch Reihen/Ebene teilbar sein', 'err'); return; }
+  try {
+    await api(ST + '/units', { method: 'POST', body: JSON.stringify({ name, type, levels, slots_per_level: slots, rows_per_level: rowsPerLevel, ace_feed_slot: aceFeedSlot }) });
+    document.getElementById('dev-name').value = '';
+    document.getElementById('dev-ace-slot').value = '';
+    toast('Gerät angelegt', 'ok');
+    loadDevices();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+});
+
+// ---------- Assign-Dialog (Klick auf einen Platz im Geräte-Raster) ----------
+let currentSlotId = null;
+let currentUnitsRef = [];
+
+function openAssignDialog(slotId, units) {
+  currentSlotId = slotId;
+  currentUnitsRef = units;
+  let unit = null, slot = null;
+  for (const u of units) {
+    const s = u.slots.find(x => x.id === slotId);
+    if (s) { unit = u; slot = s; break; }
+  }
+  if (!slot) return;
+  document.getElementById('assign-slot-label').textContent = unitSlotLabel(unit, slot);
+
+  const occupiedIds = new Set();
+  units.forEach(u => u.slots.forEach(s => { if (s.spool_id) occupiedIds.add(s.spool_id); }));
+
+  const select = document.getElementById('assign-select');
+  select.innerHTML = '<option value="">-- leer --</option>' + allSpools.map(s => {
+    const already = occupiedIds.has(s.id) && s.id !== slot.spool_id ? ' (belegt anderswo)' : '';
+    return '<option value="' + s.id + '"' + (s.id === slot.spool_id ? ' selected' : '') + '>' + spoolLabel(s) + already + '</option>';
+  }).join('');
+
+  document.getElementById('assign-clear').style.display = slot.spool_id ? '' : 'none';
+  document.getElementById('assign-overlay').classList.add('show');
+}
+
+function closeAssignDialog() {
+  document.getElementById('assign-overlay').classList.remove('show');
+  currentSlotId = null;
+}
+
+document.getElementById('assign-cancel').addEventListener('click', closeAssignDialog);
+
+document.getElementById('assign-clear').addEventListener('click', async () => {
+  if (currentSlotId == null) return;
+  try {
+    await api(ST + '/slots/' + currentSlotId, { method: 'PUT', body: JSON.stringify({ spool_id: null }) });
+    toast('Platz freigemacht', 'ok');
+    closeAssignDialog();
+    loadDevices();
+    loadSpools();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+});
+
+document.getElementById('assign-save').addEventListener('click', async () => {
+  if (currentSlotId == null) return;
+  const val = document.getElementById('assign-select').value;
+  const spoolId = val ? parseInt(val, 10) : null;
+  try {
+    await api(ST + '/slots/' + currentSlotId, { method: 'PUT', body: JSON.stringify({ spool_id: spoolId }) });
+    toast('Platz gespeichert', 'ok');
+    closeAssignDialog();
+    loadDevices();
+    loadSpools();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+});
+
+// ---------- Spool-Assign-Dialog (Ein-/Auschecken aus der Spulen-Tabelle heraus) ----------
+let currentSpoolAssignId = null;
+
+function openSpoolAssignDialog(spoolId, filterTypes) {
+  currentSpoolAssignId = spoolId;
+  const spool = spoolById(spoolId);
+  const isDrybox = filterTypes.includes('drybox');
+  document.getElementById('spool-assign-title').textContent = isDrybox ? 'In Drybox einchecken' : 'Auf Drucker/ACE auschecken';
+  document.getElementById('spool-assign-spool-label').textContent = spool ? spoolLabel(spool) : '';
+
+  const options = [];
+  allUnits.forEach(u => {
+    if (!filterTypes.includes(u.type)) return;
+    const sortedSlots = u.slots.slice().sort((a, b) => a.level - b.level || a.position - b.position);
+    sortedSlots.forEach(s => {
+      const reserved = u.type === 'printer' && u.ace_feed_slot && (s.position + 1) === u.ace_feed_slot;
+      if (reserved) return;
+      if (s.spool_id && s.spool_id !== spoolId) return;
+      options.push({ id: s.id, label: unitSlotLabel(u, s), current: s.spool_id === spoolId });
+    });
+  });
+
+  const select = document.getElementById('spool-assign-select');
+  if (!options.length) {
+    select.innerHTML = '<option value="">Keine freien Plätze verfügbar</option>';
+  } else {
+    select.innerHTML = options.map(o => '<option value="' + o.id + '"' + (o.current ? ' selected' : '') + '>' + o.label + '</option>').join('');
+  }
+  document.getElementById('spool-assign-overlay').classList.add('show');
+}
+
+function closeSpoolAssignDialog() {
+  document.getElementById('spool-assign-overlay').classList.remove('show');
+  currentSpoolAssignId = null;
+}
+
+// ---------- Drag & Drop (Stufe 3, ueberarbeitet) ----------
+let suppressNextClickFor = null;
+
+function initSpoolDrag() {
+  document.addEventListener('pointerdown', onSpoolDragPointerDown, { passive: false });
+  document.addEventListener('click', onSpoolDragClickCapture, true);
+}
+
+function findUnitAndSlotBySlotId(slotId) {
+  for (const u of allUnits) {
+    const s = u.slots.find(sl => sl.id === slotId);
+    if (s) return { unit: u, slot: s };
+  }
+  return null;
+}
+
+function slotIsReserved(unit, slot) {
+  return unit.type === 'printer' && unit.ace_feed_slot && (slot.position + 1) === unit.ace_feed_slot;
+}
+
+function findNearestSlotInCard(card, x, y) {
+  // SVG-Illustrationen haben Deko-Elemente (Regalboeden etc.), die ueber den
+  // Slot-Kreisen liegen -> elementFromPoint trifft die Kreise oft nicht direkt.
+  // Daher: naechster Slot-Kreis per Abstand zum Kreismittelpunkt, mit Toleranzradius.
+  if (!card) return null;
+  const circles = card.querySelectorAll('.slot-circle');
+  let best = null, bestDist = Infinity, bestRect = null;
+  circles.forEach(c => {
+    const r = c.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const d = Math.hypot(cx - x, cy - y);
+    if (d < bestDist) { bestDist = d; best = c; bestRect = r; }
+  });
+  if (best) {
+    const threshold = Math.max(bestRect.width, bestRect.height) * 0.9 + 8;
+    if (bestDist <= threshold) return best;
+  }
+  return null;
+}
+
+function firstFreeSlotForUnit(unit, spoolId) {
+  const sortedSlots = unit.slots.slice().sort((a, b) => a.level - b.level || a.position - b.position);
+  for (const s of sortedSlots) {
+    if (slotIsReserved(unit, s)) continue;
+    if (s.spool_id && s.spool_id !== spoolId) continue;
+    return s;
+  }
+  return null;
+}
+
+function spoolChipMarkup(spool) {
+  const f = spool.filament || {};
+  const mcHexes = f.multi_color_hexes ? f.multi_color_hexes.split(',').map(x => x.trim()).filter(Boolean) : [];
+  const flatColor = f.color_hex ? '#' + f.color_hex : '#888';
+  const icon = '<svg width="28" height="28" viewBox="0 0 18 18">' + spoolIconMarkup(9, 9, 7.5, 23.6, flatColor, mcHexes, f.multi_color_direction) + '</svg>';
+  const label = document.createElement('div');
+  label.textContent = spoolLabel(spool);
+  return icon + label.outerHTML.replace('<div>', '<span>').replace('</div>', '</span>');
+}
+
+function onSpoolDragPointerDown(e) {
+  if (e.button !== undefined && e.button !== 0) return;
+  const slotCircle = e.target.closest('.slot-circle');
+  const row = e.target.closest('#spool-content tr[data-id]');
+  let spoolId = null;
+  let sourceInfo = null;
+  let sourceEl = null;
+
+  if (row) {
+    if (e.target.closest('button, input, .row-actions')) return;
+    spoolId = parseInt(row.dataset.id, 10);
+    sourceEl = row;
+  } else if (slotCircle) {
+    const found = findUnitAndSlotBySlotId(parseInt(slotCircle.dataset.slotId, 10));
+    if (found && found.slot.spool_id) {
+      spoolId = found.slot.spool_id;
+      sourceInfo = found;
+      sourceEl = slotCircle;
+    }
+  }
+  if (!spoolId) return;
+  const spool = spoolById(spoolId);
+  if (!spool) return;
+
+  // Verhindert Text-/Native-Drag-Selektion des Browsers waehrend unseres eigenen Drags.
+  e.preventDefault();
+
+  const startX = e.clientX, startY = e.clientY;
+  let started = false;
+  let chip = null;
+  let hoveredSlotEl = null;
+
+  const clearSlotHover = () => {
+    if (hoveredSlotEl) { hoveredSlotEl.classList.remove('drop-target'); hoveredSlotEl = null; }
+  };
+
+  const onMove = (ev) => {
+    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    if (!started) {
+      if (Math.hypot(dx, dy) < 8) return;
+      started = true;
+      chip = document.createElement('div');
+      chip.className = 'spool-drag-chip';
+      chip.innerHTML = spoolChipMarkup(spool);
+      document.body.appendChild(chip);
+    }
+    chip.style.left = ev.clientX + 'px';
+    chip.style.top = ev.clientY + 'px';
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const card = el ? el.closest('.device-card') : null;
+    const slotEl = findNearestSlotInCard(card, ev.clientX, ev.clientY);
+    const panelEl = document.getElementById('spool-content');
+    const panel = panelEl ? panelEl.closest('.panel') : null;
+    const overPanel = !!(panel && el && panel.contains(el));
+
+    if (hoveredSlotEl !== slotEl) { clearSlotHover(); if (slotEl) { slotEl.classList.add('drop-target'); hoveredSlotEl = slotEl; } }
+    document.querySelectorAll('.device-card.drop-hover').forEach(c => { if (c !== card) c.classList.remove('drop-hover'); });
+    if (card) card.classList.add('drop-hover');
+    if (panel) panel.classList.toggle('drop-hover', overPanel && !card);
+  };
+
+  const onUp = (ev) => {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    document.querySelectorAll('.drop-hover').forEach(c => c.classList.remove('drop-hover'));
+    clearSlotHover();
+    if (!started) { return; }
+    if (chip) chip.remove();
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const card = el ? el.closest('.device-card') : null;
+    const slotEl = findNearestSlotInCard(card, ev.clientX, ev.clientY);
+    const panelEl = document.getElementById('spool-content');
+    const panel = panelEl ? panelEl.closest('.panel') : null;
+    const overPanel = !!(panel && el && panel.contains(el));
+    finishSpoolDrag(spoolId, sourceInfo, slotEl, card, overPanel && !card);
+    if (sourceEl) {
+      suppressNextClickFor = sourceEl;
+      setTimeout(() => { suppressNextClickFor = null; }, 0);
+    }
+  };
+
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('pointercancel', onUp);
+}
+
+function onSpoolDragClickCapture(e) {
+  if (suppressNextClickFor && (suppressNextClickFor === e.target || suppressNextClickFor.contains(e.target))) {
+    e.preventDefault();
+    e.stopPropagation();
+    suppressNextClickFor = null;
+  }
+}
+
+async function assignToSlot(spoolId, targetSlotId, sourceInfo, unitLabel) {
+  try {
+    await api(ST + '/slots/' + targetSlotId, { method: 'PUT', body: JSON.stringify({ spool_id: spoolId }) });
+    await loadDevices();
+    await loadSpools();
+    const prevSlotId = sourceInfo ? sourceInfo.slot.id : null;
+    toastUndo('Auf ' + unitLabel + ' gelegt', async () => {
+      try {
+        if (prevSlotId) {
+          // Ein einzelner PUT auf den alten Platz stellt ihn wieder her UND leert
+          // automatisch den neuen Platz (Backend raeumt die Spule ueberall sonst frei).
+          await api(ST + '/slots/' + prevSlotId, { method: 'PUT', body: JSON.stringify({ spool_id: spoolId }) });
+        } else {
+          await api(ST + '/slots/' + targetSlotId, { method: 'PUT', body: JSON.stringify({ spool_id: null }) });
+        }
+        await loadDevices();
+        await loadSpools();
+        toast('Rückgängig gemacht', 'ok');
+      } catch (e) { toast('Fehler beim Rückgängigmachen: ' + e.message, 'err'); }
+    });
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+}
+
+async function finishSpoolDrag(spoolId, sourceInfo, slotEl, targetCard, dropOnPanel) {
+  // 1) Praeziser Slot-Drop: der konkret unter dem Cursor liegende Platz gewinnt immer,
+  //    auch innerhalb desselben Geraets (Verschieben/Vertauschen des Lagerplatzes).
+  if (slotEl) {
+    const targetSlotId = parseInt(slotEl.dataset.slotId, 10);
+    const found = findUnitAndSlotBySlotId(targetSlotId);
+    if (!found) return;
+    const { unit, slot } = found;
+    if (sourceInfo && sourceInfo.slot.id === slot.id) return; // gleicher Platz, keine Aenderung
+    if (slotIsReserved(unit, slot)) {
+      toast('Dieser Platz ist für die ACE-Zuführung reserviert', 'err');
+      return;
+    }
+    if (slot.spool_id && slot.spool_id !== spoolId) {
+      toast('Platz ist bereits belegt', 'err');
+      return;
+    }
+    await assignToSlot(spoolId, slot.id, sourceInfo, unit.name || 'Gerät');
+    return;
+  }
+
+  // 2) Unpräziser Drop auf eine Geräte-Karte (kein bestimmter Platz getroffen) -> erster freier Platz.
+  if (targetCard) {
+    const unitId = parseInt(targetCard.dataset.unitId, 10);
+    const unit = allUnits.find(u => u.id === unitId);
+    if (!unit) return;
+    const freeSlot = firstFreeSlotForUnit(unit, spoolId);
+    if (!freeSlot) {
+      toast('Kein freier Platz auf ' + (unit.name || 'diesem Gerät'), 'err');
+      return;
+    }
+    if (sourceInfo && sourceInfo.slot.id === freeSlot.id) return;
+    await assignToSlot(spoolId, freeSlot.id, sourceInfo, unit.name || 'Gerät');
+    return;
+  }
+
+  // 3) Drop auf das Spulenverzeichnis-Panel -> Platz freigeben.
+  if (dropOnPanel) {
+    const found = sourceInfo || findSlotForSpool(spoolId);
+    if (!found) return;
+    const slotId = found.slot.id;
+    try {
+      await api(ST + '/slots/' + slotId, { method: 'PUT', body: JSON.stringify({ spool_id: null }) });
+      await loadDevices();
+      await loadSpools();
+      toastUndo('Platz freigegeben', async () => {
+        try {
+          await api(ST + '/slots/' + slotId, { method: 'PUT', body: JSON.stringify({ spool_id: spoolId }) });
+          await loadDevices();
+          await loadSpools();
+          toast('Rückgängig gemacht', 'ok');
+        } catch (e) { toast('Fehler beim Rückgängigmachen: ' + e.message, 'err'); }
+      });
+    } catch (e) {
+      toast('Fehler: ' + e.message, 'err');
+    }
+  }
+}
+
+function toastUndo(msg, onUndo) {
+  const t = document.getElementById('toast');
+  t.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = msg + ' ';
+  const btn = document.createElement('button');
+  btn.textContent = 'Rückgängig';
+  btn.className = 'toast-undo-btn';
+  btn.addEventListener('click', () => {
+    clearTimeout(t._timer);
+    t.className = 'toast';
+    onUndo();
+  });
+  t.appendChild(span);
+  t.appendChild(btn);
+  t.className = 'toast show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = 'toast'; }, 5000);
+}
+
+document.getElementById('spool-assign-cancel').addEventListener('click', closeSpoolAssignDialog);
+
+document.getElementById('spool-assign-save').addEventListener('click', async () => {
+  if (currentSpoolAssignId == null) return;
+  const val = document.getElementById('spool-assign-select').value;
+  if (!val) { toast('Kein Platz ausgewählt', 'err'); return; }
+  try {
+    await api(ST + '/slots/' + val, { method: 'PUT', body: JSON.stringify({ spool_id: currentSpoolAssignId }) });
+    toast('Platz zugewiesen', 'ok');
+    closeSpoolAssignDialog();
+    await loadDevices();
+    await loadSpools();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+});
+
+// ---------- Einkaufsliste ----------
+async function loadShoppingList() {
+  const el = document.getElementById('shopping-content');
+  try {
+    const items = await api(ST + '/shopping-list');
+    if (!items.length) {
+      el.innerHTML = '<div class="empty">Einkaufsliste ist leer.</div>';
+      return;
+    }
+    const rows = items.map(it => {
+      const color = it.color_hex ? '#' + it.color_hex : null;
+      const parts = [];
+      if (it.material) parts.push(it.material);
+      if (it.color_name) parts.push(it.color_name);
+      const title = parts.join(' &ndash; ') || (it.note || 'Eintrag');
+      return '<tr data-id="' + it.id + '">' +
+        '<td>' + (color ? '<span class="swatch" style="background:' + color + '"></span>' : '') + title + '</td>' +
+        '<td>' + (it.vendor || '<span class="muted">&ndash;</span>') + '</td>' +
+        '<td>' + (it.note || '<span class="muted">&ndash;</span>') + '</td>' +
+        '<td><button class="btn secondary danger shop-delete">Entfernen</button></td>' +
+      '</tr>';
+    }).join('');
+    el.innerHTML = '<table><thead><tr><th>Material/Farbe</th><th>Hersteller</th><th>Notiz</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    el.querySelectorAll('tbody tr').forEach(tr => {
+      const id = tr.dataset.id;
+      tr.querySelector('.shop-delete').addEventListener('click', async () => {
+        try {
+          await api(ST + '/shopping-list/' + id, { method: 'DELETE' });
+          toast('Eintrag entfernt', 'ok');
+          loadShoppingList();
+        } catch (e) {
+          toast('Fehler: ' + e.message, 'err');
+        }
+      });
+    });
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Fehler beim Laden: ' + e.message + '</div>';
+  }
+}
+
+document.getElementById('shop-add-btn').addEventListener('click', async () => {
+  const material = document.getElementById('shop-material').value.trim();
+  const color_name = document.getElementById('shop-color').value.trim();
+  const vendor = document.getElementById('shop-vendor').value.trim();
+  const note = document.getElementById('shop-note').value.trim();
+  if (!material && !color_name && !note) { toast('Bitte mindestens Material, Farbe oder Notiz angeben', 'err'); return; }
+  try {
+    await api(ST + '/shopping-list', {
+      method: 'POST',
+      body: JSON.stringify({ material: material || null, color_name: color_name || null, vendor: vendor || null, note: note || null })
+    });
+    document.getElementById('shop-material').value = '';
+    document.getElementById('shop-color').value = '';
+    document.getElementById('shop-vendor').value = '';
+    document.getElementById('shop-note').value = '';
+    toast('Zur Einkaufsliste hinzugefüght', 'ok');
+    loadShoppingList();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+});
+
+let spoolFieldDefs = null;
+let filamentFieldDefs = null;
+let allFilaments = null;
+let allVendors = null;
+let sdCurrentSpool = null;
+let dbSearchTimer = null;
+
+async function ensureFieldDefs() {
+  if (spoolFieldDefs && filamentFieldDefs) return;
+  try {
+    spoolFieldDefs = await api(SP + '/field/spool');
+  } catch (e) {
+    spoolFieldDefs = [];
+  }
+  try {
+    filamentFieldDefs = await api(SP + '/field/filament');
+  } catch (e) {
+    filamentFieldDefs = [];
+  }
+}
+
+function decodeExtraValue(fieldType, raw) {
+  if (raw == null) return '';
+  try {
+    const v = JSON.parse(raw);
+    if (fieldType === 'boolean') return !!v;
+    return v == null ? '' : v;
+  } catch (e) {
+    return raw;
+  }
+}
+
+function encodeExtraValue(fieldType, rawValue) {
+  if (fieldType === 'boolean') return JSON.stringify(!!rawValue);
+  if (fieldType === 'integer') {
+    if (rawValue === '' || rawValue == null) return null;
+    return JSON.stringify(parseInt(rawValue, 10));
+  }
+  if (fieldType === 'float') {
+    if (rawValue === '' || rawValue == null) return null;
+    return JSON.stringify(parseFloat(rawValue));
+  }
+  if (rawValue === '' || rawValue == null) return null;
+  return JSON.stringify(String(rawValue));
+}
+
+function renderExtraFieldInputs(defs, currentExtra, idPrefix) {
+  if (!defs || !defs.length) return '';
+  currentExtra = currentExtra || {};
+  const rows = defs.map(f => {
+    const val = decodeExtraValue(f.field_type, currentExtra[f.key]);
+    const unit = f.unit ? ' (' + f.unit + ')' : '';
+    const inputId = idPrefix + '-extra-' + f.key;
+    let inputHtml;
+    if (f.field_type === 'boolean') {
+      inputHtml = '<input type="checkbox" id="' + inputId + '"' + (val ? ' checked' : '') + '>';
+    } else if (f.field_type === 'choice' && f.choices) {
+      inputHtml = '<select id="' + inputId + '"><option value=""></option>' +
+        f.choices.map(c => '<option value="' + c + '"' + (val === c ? ' selected' : '') + '>' + c + '</option>').join('') +
+        '</select>';
+    } else if (f.field_type === 'integer' || f.field_type === 'float') {
+      inputHtml = '<input type="number" id="' + inputId + '" step="' + (f.field_type === 'integer' ? '1' : 'any') + '" value="' + (val === '' ? '' : val) + '">';
+    } else {
+      const safeVal = val === '' ? '' : String(val).replace(/"/g, '&quot;');
+      inputHtml = '<input type="text" id="' + inputId + '" value="' + safeVal + '">';
+    }
+    return '<div><label for="' + inputId + '">' + f.name + unit + '</label>' + inputHtml + '</div>';
+  }).join('');
+  return '<div class="field-grid">' + rows + '</div>';
+}
+
+function collectExtraFieldValues(defs, idPrefix, originalExtra) {
+  if (!defs || !defs.length) return {};
+  originalExtra = originalExtra || {};
+  const out = {};
+  defs.forEach(f => {
+    const el = document.getElementById(idPrefix + '-extra-' + f.key);
+    if (!el) return;
+    if (f.field_type === 'boolean') {
+      const encoded = encodeExtraValue(f.field_type, el.checked);
+      if (encoded !== originalExtra[f.key]) out[f.key] = encoded;
+      return;
+    }
+    const raw = el.value;
+    const hadValue = originalExtra[f.key] != null;
+    if (raw === '') {
+      if (hadValue) out[f.key] = null;
+      return;
+    }
+    const encoded = encodeExtraValue(f.field_type, raw);
+    if (encoded !== originalExtra[f.key]) out[f.key] = encoded;
+  });
+  return out;
+}
+
+async function openSpoolDetail(spoolId) {
+  await ensureFieldDefs();
+  let spool;
+  try {
+    spool = await api(SP + '/spool/' + spoolId);
+  } catch (e) {
+    toast('Fehler beim Laden: ' + e.message, 'err');
+    return;
+  }
+  sdCurrentSpool = spool;
+  const f = spool.filament || {};
+  document.getElementById('spool-detail-title').textContent = spoolLabel(spool);
+  document.getElementById('spool-detail-subtitle').textContent = 'Spule #' + spool.id + (spool.archived ? ' · archiviert' : '');
+
+  document.getElementById('sd-price').value = spool.price != null ? spool.price : '';
+  document.getElementById('sd-initial-weight').value = spool.initial_weight != null ? spool.initial_weight : '';
+  document.getElementById('sd-spool-weight').value = spool.spool_weight != null ? spool.spool_weight : '';
+  document.getElementById('sd-lot-nr').value = spool.lot_nr || '';
+  document.getElementById('sd-comment').value = spool.comment || '';
+
+  document.getElementById('sd-fil-name').value = f.name || '';
+  document.getElementById('sd-fil-material').value = f.material || '';
+  document.getElementById('sd-fil-vendor').value = f.vendor ? f.vendor.name : '';
+  document.getElementById('sd-fil-color').value = f.color_hex || '';
+  const sdMultiHexes = f.multi_color_hexes ? f.multi_color_hexes.split(',').map(x => x.trim()).filter(Boolean) : [];
+  if (sdMultiHexes.length >= 2) {
+    renderMcRows('sd', sdMultiHexes);
+    document.getElementById('sd-fil-multi-direction').value = f.multi_color_direction || 'longitudinal';
+    setColorMode('sd', 'multi');
+  } else {
+    renderMcRows('sd', []);
+    document.getElementById('sd-fil-multi-direction').value = 'longitudinal';
+    setColorMode('sd', 'single');
+  }
+  document.getElementById('sd-fil-diameter').value = f.diameter != null ? f.diameter : '';
+  document.getElementById('sd-fil-density').value = f.density != null ? f.density : '';
+  document.getElementById('sd-fil-extruder-temp').value = f.settings_extruder_temp != null ? f.settings_extruder_temp : '';
+  document.getElementById('sd-fil-bed-temp').value = f.settings_bed_temp != null ? f.settings_bed_temp : '';
+
+  document.querySelectorAll('#sd-filament-fields input, #sd-filament-fields select, #sd-filament-fields button').forEach(inp => { inp.disabled = true; });
+  const filToggle = document.getElementById('sd-filament-toggle');
+  filToggle.textContent = 'Filament-Typ bearbeiten';
+  filToggle.dataset.unlocked = '0';
+
+  document.getElementById('sd-extra-fields').innerHTML =
+    (spoolFieldDefs && spoolFieldDefs.length)
+      ? '<div class="section-label">Individuelle Werte</div>' + renderExtraFieldInputs(spoolFieldDefs, spool.extra, 'sd')
+      : '';
+
+  document.getElementById('spool-detail-overlay').classList.add('show');
+}
+
+function closeSpoolDetail() {
+  document.getElementById('spool-detail-overlay').classList.remove('show');
+  sdCurrentSpool = null;
+}
+
+document.getElementById('sd-filament-toggle').addEventListener('click', () => {
+  const btnEl = document.getElementById('sd-filament-toggle');
+  const unlocked = btnEl.dataset.unlocked === '1';
+  document.querySelectorAll('#sd-filament-fields input, #sd-filament-fields select, #sd-filament-fields button').forEach(inp => { inp.disabled = unlocked; });
+  btnEl.dataset.unlocked = unlocked ? '0' : '1';
+  btnEl.textContent = unlocked ? 'Filament-Typ bearbeiten' : 'Bearbeitung abbrechen';
+});
+
+document.getElementById('spool-detail-cancel').addEventListener('click', closeSpoolDetail);
+
+document.getElementById('spool-detail-save').addEventListener('click', async () => {
+  if (!sdCurrentSpool) return;
+  const spool = sdCurrentSpool;
+  try {
+    const spoolBody = {
+      price: document.getElementById('sd-price').value === '' ? null : parseFloat(document.getElementById('sd-price').value),
+      initial_weight: document.getElementById('sd-initial-weight').value === '' ? null : parseFloat(document.getElementById('sd-initial-weight').value),
+      spool_weight: document.getElementById('sd-spool-weight').value === '' ? null : parseFloat(document.getElementById('sd-spool-weight').value),
+      lot_nr: document.getElementById('sd-lot-nr').value || null,
+      comment: document.getElementById('sd-comment').value || null,
+    };
+    const extraPatch = collectExtraFieldValues(spoolFieldDefs, 'sd', spool.extra || {});
+    if (Object.keys(extraPatch).length) spoolBody.extra = extraPatch;
+    await api(SP + '/spool/' + spool.id, { method: 'PATCH', body: JSON.stringify(spoolBody) });
+
+    const filUnlocked = document.getElementById('sd-filament-toggle').dataset.unlocked === '1';
+    if (filUnlocked && spool.filament) {
+      const sdColorMode = document.getElementById('sd-color-mode-toggle').dataset.mode;
+      const sdMcHexesOut = sdColorMode === 'multi' ? collectMcHexes('sd') : [];
+      const filBody = {
+        name: document.getElementById('sd-fil-name').value || null,
+        material: document.getElementById('sd-fil-material').value || null,
+        color_hex: (sdColorMode === 'multi' && sdMcHexesOut.length >= 2) ? null : (document.getElementById('sd-fil-color').value || null),
+        multi_color_hexes: (sdColorMode === 'multi' && sdMcHexesOut.length >= 2) ? sdMcHexesOut.join(',') : null,
+        multi_color_direction: (sdColorMode === 'multi' && sdMcHexesOut.length >= 2) ? document.getElementById('sd-fil-multi-direction').value : null,
+        diameter: document.getElementById('sd-fil-diameter').value === '' ? undefined : parseFloat(document.getElementById('sd-fil-diameter').value),
+        density: document.getElementById('sd-fil-density').value === '' ? undefined : parseFloat(document.getElementById('sd-fil-density').value),
+        settings_extruder_temp: document.getElementById('sd-fil-extruder-temp').value === '' ? null : parseInt(document.getElementById('sd-fil-extruder-temp').value, 10),
+        settings_bed_temp: document.getElementById('sd-fil-bed-temp').value === '' ? null : parseInt(document.getElementById('sd-fil-bed-temp').value, 10),
+      };
+      await api(SP + '/filament/' + spool.filament.id, { method: 'PATCH', body: JSON.stringify(filBody) });
+    }
+    toast('Gespeichert', 'ok');
+    closeSpoolDetail();
+    await loadSpools();
+    await loadDevices();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+});
+
+async function ensureFilamentAndVendorLists(force) {
+  if (allFilaments && allVendors && !force) return;
+  try {
+    allFilaments = await api(SP + '/filament');
+  } catch (e) {
+    allFilaments = [];
+  }
+  try {
+    allVendors = await api(SP + '/vendor');
+  } catch (e) {
+    allVendors = [];
+  }
+}
+
+function filamentOptionLabel(f) {
+  const vendor = f.vendor ? f.vendor.name : '';
+  const parts = [vendor, f.material, f.name].filter(Boolean);
+  return parts.join(' · ');
+}
+
+function renderFilamentSelect(filterText) {
+  const select = document.getElementById('ns-filament-select');
+  filterText = (filterText || '').toLowerCase();
+  const opts = allFilaments
+    .filter(f => !filterText || filamentOptionLabel(f).toLowerCase().includes(filterText))
+    .map(f => '<option value="' + f.id + '">' + filamentOptionLabel(f) + '</option>');
+  select.innerHTML = opts.length ? opts.join('') : '<option value="">Keine Treffer</option>';
+}
+
+function renderVendorSelect() {
+  const select = document.getElementById('ns-fil-vendor-select');
+  const opts = allVendors.map(v => '<option value="' + v.id + '">' + v.name + '</option>');
+  select.innerHTML = opts.join('') + '<option value="__new__">+ Neuer Hersteller&hellip;</option>';
+}
+
+function renderDbResults(items) {
+  const box = document.getElementById('ns-db-results');
+  if (!items || !items.length) {
+    box.innerHTML = '<div class="db-result-row"><span class="db-result-meta">Keine Treffer in der SpoolmanDB</span></div>';
+    box.style.display = '';
+    return;
+  }
+  box.innerHTML = items.map((it, i) => {
+    const meta = [it.manufacturer, it.material, (it.weight ? it.weight + ' g' : '')].filter(Boolean).join(' · ');
+    return '<div class="db-result-row" data-idx="' + i + '"><strong>' + it.name + '</strong><br><span class="db-result-meta">' + meta + '</span></div>';
+  }).join('');
+  box.style.display = '';
+  box.querySelectorAll('.db-result-row').forEach((row, i) => {
+    row.addEventListener('click', () => applyExternalFilament(items[i]));
+  });
+}
+
+function applyExternalFilament(item) {
+  document.getElementById('ns-fil-name').value = item.name || '';
+  document.getElementById('ns-fil-material').value = item.material || '';
+  document.getElementById('ns-fil-color').value = item.color_hex || '';
+  document.getElementById('ns-fil-diameter').value = item.diameter != null ? item.diameter : '1.75';
+  document.getElementById('ns-fil-density').value = item.density != null ? item.density : '';
+  document.getElementById('ns-fil-extruder-temp').value = item.extruder_temp != null ? item.extruder_temp : '';
+  document.getElementById('ns-fil-bed-temp').value = item.bed_temp != null ? item.bed_temp : '';
+  if (item.weight != null) document.getElementById('ns-initial-weight').value = item.weight;
+  if (item.spool_weight != null) document.getElementById('ns-spool-weight').value = item.spool_weight;
+
+  const vendorSelect = document.getElementById('ns-fil-vendor-select');
+  const wantName = (item.manufacturer || '').trim().toLowerCase();
+  const match = allVendors.find(v => v.name.trim().toLowerCase() === wantName);
+  if (match) {
+    vendorSelect.value = String(match.id);
+    document.getElementById('ns-fil-vendor-new-wrap').style.display = 'none';
+  } else {
+    vendorSelect.value = '__new__';
+    document.getElementById('ns-fil-vendor-new').value = item.manufacturer || '';
+    document.getElementById('ns-fil-vendor-new-wrap').style.display = '';
+  }
+
+  document.getElementById('ns-db-results').style.display = 'none';
+  document.getElementById('ns-db-search').value = item.manufacturer ? (item.manufacturer + ' ' + item.name) : item.name;
+  toast('Werte aus SpoolmanDB übernommen', 'ok');
+}
+function mcRowHtml(value) {
+  const v = value || '';
+  return '<div class="mc-row"><span class="mc-swatch" style="background:' + (v ? '#' + v : '#888') + '"></span><input type="text" class="mc-hex-input" placeholder="z.B. FF0000" value="' + v + '"><button type="button" class="btn secondary icon-only mc-remove-btn" title="Entfernen">&#10005;</button></div>';
+}
+
+function wireMcRows(box) {
+  box.querySelectorAll('.mc-remove-btn').forEach(btn => {
+    btn.onclick = () => {
+      if (box.querySelectorAll('.mc-row').length > 2) btn.closest('.mc-row').remove();
+      else toast('Mindestens 2 Farben nötig', 'err');
+    };
+  });
+  box.querySelectorAll('.mc-hex-input').forEach(inp => {
+    inp.oninput = () => {
+      const v = inp.value.trim().replace(/^#/, '');
+      inp.previousElementSibling.style.background = v ? '#' + v : '#888';
+    };
+  });
+}
+
+function renderMcRows(prefix, values) {
+  const box = document.getElementById(prefix + '-multicolor-rows');
+  const vals = (values && values.length >= 2) ? values : ['', ''];
+  box.innerHTML = vals.map(v => mcRowHtml(v)).join('');
+  wireMcRows(box);
+}
+
+function collectMcHexes(prefix) {
+  return Array.from(document.querySelectorAll('#' + prefix + '-multicolor-rows .mc-hex-input'))
+    .map(inp => inp.value.trim().replace(/^#/, ''))
+    .filter(Boolean);
+}
+
+function setColorMode(prefix, mode) {
+  const toggle = document.getElementById(prefix + '-color-mode-toggle');
+  const single = document.getElementById(prefix + '-fil-color').closest('div');
+  const multi = document.getElementById(prefix + '-multicolor-block');
+  if (mode === 'multi') {
+    single.style.display = 'none';
+    multi.style.display = '';
+    toggle.dataset.mode = 'multi';
+    toggle.textContent = 'Einfarbig verwenden';
+  } else {
+    single.style.display = '';
+    multi.style.display = 'none';
+    toggle.dataset.mode = 'single';
+    toggle.textContent = 'Mehrfarbig?';
+  }
+}
+
+function multiColorGradient(hexArr) {
+  const n = hexArr.length;
+  if (n < 2) return hexArr[0] ? '#' + hexArr[0] : '#888';
+  const stops = [];
+  const step = 100 / n;
+  hexArr.forEach((h, i) => {
+    const c = '#' + h;
+    const start = (i * step).toFixed(2);
+    const end = ((i + 1) * step).toFixed(2);
+    stops.push(c + ' ' + start + '%');
+    stops.push(c + ' ' + end + '%');
+  });
+  return 'linear-gradient(90deg, ' + stops.join(', ') + ')';
+}
+
+document.getElementById('ns-color-mode-toggle').addEventListener('click', () => {
+  const cur = document.getElementById('ns-color-mode-toggle').dataset.mode;
+  if (cur === 'multi') { setColorMode('ns', 'single'); }
+  else { renderMcRows('ns', []); setColorMode('ns', 'multi'); }
+});
+document.getElementById('ns-multicolor-add').addEventListener('click', () => {
+  const box = document.getElementById('ns-multicolor-rows');
+  box.insertAdjacentHTML('beforeend', mcRowHtml(''));
+  wireMcRows(box);
+});
+
+document.getElementById('sd-color-mode-toggle').addEventListener('click', () => {
+  const cur = document.getElementById('sd-color-mode-toggle').dataset.mode;
+  if (cur === 'multi') { setColorMode('sd', 'single'); }
+  else { renderMcRows('sd', []); setColorMode('sd', 'multi'); }
+});
+document.getElementById('sd-multicolor-add').addEventListener('click', () => {
+  const box = document.getElementById('sd-multicolor-rows');
+  box.insertAdjacentHTML('beforeend', mcRowHtml(''));
+  wireMcRows(box);
+});
+async function openNewSpoolDialog() {
+  await ensureFieldDefs();
+  await ensureFilamentAndVendorLists();
+  renderFilamentSelect('');
+  renderVendorSelect();
+  document.getElementById('ns-filament-search').value = '';
+  document.getElementById('ns-db-search').value = '';
+  document.getElementById('ns-db-results').style.display = 'none';
+  document.getElementById('ns-db-results').innerHTML = '';
+  document.getElementById('ns-existing-block').style.display = '';
+  document.getElementById('ns-new-block').style.display = 'none';
+  document.getElementById('ns-mode-toggle').textContent = 'Neuen Filament-Typ anlegen';
+  document.getElementById('ns-mode-toggle').dataset.mode = 'existing';
+  document.getElementById('ns-fil-vendor-new-wrap').style.display = 'none';
+
+  ['ns-fil-name', 'ns-fil-material', 'ns-fil-color', 'ns-fil-density', 'ns-fil-extruder-temp', 'ns-fil-bed-temp', 'ns-fil-vendor-new'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  setColorMode('ns', 'single');
+  renderMcRows('ns', []);
+  document.getElementById('ns-fil-multi-direction').value = 'longitudinal';
+  document.getElementById('ns-fil-diameter').value = '1.75';
+  document.getElementById('ns-price').value = '';
+  document.getElementById('ns-initial-weight').value = '1000';
+  document.getElementById('ns-spool-weight').value = '';
+  document.getElementById('ns-lot-nr').value = '';
+
+  document.getElementById('ns-extra-fields').innerHTML =
+    (spoolFieldDefs && spoolFieldDefs.length)
+      ? '<div class="section-label">Individuelle Werte</div>' + renderExtraFieldInputs(spoolFieldDefs, {}, 'ns')
+      : '';
+
+  document.getElementById('new-spool-overlay').classList.add('show');
+}
+
+function closeNewSpoolDialog() {
+  document.getElementById('new-spool-overlay').classList.remove('show');
+}
+
+document.getElementById('ns-mode-toggle').addEventListener('click', () => {
+  const toggleEl = document.getElementById('ns-mode-toggle');
+  const toNew = toggleEl.dataset.mode !== 'new';
+  document.getElementById('ns-existing-block').style.display = toNew ? 'none' : '';
+  document.getElementById('ns-new-block').style.display = toNew ? '' : 'none';
+  toggleEl.dataset.mode = toNew ? 'new' : 'existing';
+  toggleEl.textContent = toNew ? 'Bestehenden Filament-Typ wählen' : 'Neuen Filament-Typ anlegen';
+});
+
+document.getElementById('ns-filament-search').addEventListener('input', e => renderFilamentSelect(e.target.value));
+
+document.getElementById('ns-db-search').addEventListener('input', e => {
+  clearTimeout(dbSearchTimer);
+  const q = e.target.value.trim();
+  const resultsEl = document.getElementById('ns-db-results');
+  if (!q) { resultsEl.style.display = 'none'; resultsEl.innerHTML = ''; return; }
+  dbSearchTimer = setTimeout(async () => {
+    try {
+      const items = await api(SP + '/external/filament/search?query=' + encodeURIComponent(q) + '&limit=8');
+      renderDbResults(items);
+    } catch (e) { resultsEl.style.display = 'none'; }
+  }, 350);
+});
+
+document.getElementById('ns-fil-vendor-select').addEventListener('change', e => {
+  document.getElementById('ns-fil-vendor-new-wrap').style.display = e.target.value === '__new__' ? '' : 'none';
+});
+
+document.getElementById('new-spool-cancel').addEventListener('click', closeNewSpoolDialog);
+
+document.getElementById('new-spool-save').addEventListener('click', async () => {
+  try {
+    const mode = document.getElementById('ns-mode-toggle').dataset.mode;
+    let filamentId;
+    if (mode === 'new') {
+      let vendorId = document.getElementById('ns-fil-vendor-select').value;
+      if (vendorId === '__new__') {
+        const vendorName = document.getElementById('ns-fil-vendor-new').value.trim();
+        if (!vendorName) { toast('Bitte Herstellername angeben', 'err'); return; }
+        const v = await api(SP + '/vendor', { method: 'POST', body: JSON.stringify({ name: vendorName }) });
+        vendorId = v.id;
+        allVendors = null;
+      } else {
+        vendorId = vendorId ? parseInt(vendorId, 10) : null;
+      }
+      const name = document.getElementById('ns-fil-name').value.trim();
+      const material = document.getElementById('ns-fil-material').value.trim();
+      const diameter = parseFloat(document.getElementById('ns-fil-diameter').value);
+      const density = parseFloat(document.getElementById('ns-fil-density').value);
+      if (!name || !material || !diameter || !density) {
+        toast('Bitte Name, Material, Durchmesser und Dichte angeben', 'err');
+        return;
+      }
+      const nsColorMode = document.getElementById('ns-color-mode-toggle').dataset.mode;
+      const nsMcHexesOut = nsColorMode === 'multi' ? collectMcHexes('ns') : [];
+      if (nsColorMode === 'multi' && nsMcHexesOut.length < 2) { toast('Bitte mindestens 2 Farben angeben', 'err'); return; }
+      const filBody = {
+        name: name,
+        material: material,
+        diameter: diameter,
+        density: density,
+        vendor_id: vendorId || null,
+        color_hex: (nsColorMode === 'multi') ? null : (document.getElementById('ns-fil-color').value || null),
+        multi_color_hexes: (nsColorMode === 'multi') ? nsMcHexesOut.join(',') : null,
+        multi_color_direction: (nsColorMode === 'multi') ? document.getElementById('ns-fil-multi-direction').value : null,
+        settings_extruder_temp: document.getElementById('ns-fil-extruder-temp').value === '' ? null : parseInt(document.getElementById('ns-fil-extruder-temp').value, 10),
+        settings_bed_temp: document.getElementById('ns-fil-bed-temp').value === '' ? null : parseInt(document.getElementById('ns-fil-bed-temp').value, 10),
+      };
+      const newFil = await api(SP + '/filament', { method: 'POST', body: JSON.stringify(filBody) });
+      filamentId = newFil.id;
+      allFilaments = null;
+    } else {
+      const val = document.getElementById('ns-filament-select').value;
+      if (!val) { toast('Bitte einen Filament-Typ wählen', 'err'); return; }
+      filamentId = parseInt(val, 10);
+    }
+
+    const spoolBody = {
+      filament_id: filamentId,
+      price: document.getElementById('ns-price').value === '' ? null : parseFloat(document.getElementById('ns-price').value),
+      initial_weight: document.getElementById('ns-initial-weight').value === '' ? null : parseFloat(document.getElementById('ns-initial-weight').value),
+      spool_weight: document.getElementById('ns-spool-weight').value === '' ? null : parseFloat(document.getElementById('ns-spool-weight').value),
+      lot_nr: document.getElementById('ns-lot-nr').value || null,
+    };
+    const extraPatch = collectExtraFieldValues(spoolFieldDefs, 'ns', {});
+    if (Object.keys(extraPatch).length) spoolBody.extra = extraPatch;
+
+    await api(SP + '/spool', { method: 'POST', body: JSON.stringify(spoolBody) });
+    toast('Spule angelegt', 'ok');
+    closeNewSpoolDialog();
+    await loadSpools();
+  } catch (e) {
+    toast('Fehler: ' + e.message, 'err');
+  }
+});
+
+document.getElementById('new-spool-btn').addEventListener('click', openNewSpoolDialog);
+document.getElementById('spool-search').addEventListener('input', (e) => {
+  spoolSearchText = e.target.value;
+  spoolPage = 1;
+  renderSpoolTable();
+});
+initSpoolDrag();
+// ---------- Init ----------
+async function init() {
+  try {
+    allSpools = await api(SP + '/spool');
+  } catch (e) {}
+  await loadDevices();
+  await loadSpools();
+  await loadShoppingList();
+}
+init();
+</script>
+<script>
+(function() {
+  var spoolmanPort = window.__SPOOLMAN_PORT__ || '8091';
+  var url = location.protocol + '//' + location.hostname + ':' + spoolmanPort;
+  ['spoolman-link-top', 'spoolman-link-bottom'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.href = url;
+  });
+})();
+</script>
+</body>
+</html>
+
