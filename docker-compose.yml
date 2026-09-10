@@ -1,0 +1,45 @@
+# Filament-Lager -- Testversion
+#
+# Eigenstaendiger Stack ohne Abhaengigkeit von Docker Swarm, Traefik, HAProxy
+# oder GlusterFS. Laeuft unveraendert mit "docker compose up" auf Docker Desktop
+# (Windows/Mac) genauso wie auf jedem Linux-Host mit Docker + Compose-Plugin.
+#
+# Enthaltene Dienste:
+#   - spoolman: Filament-Inventarverwaltung (https://github.com/Donkie/Spoolman)
+#   - storage:  eigenes Lagerplatz-Backend (FastAPI + SQLite)
+#   - dashboard: Frontend (nginx, statische SPA + Reverse-Proxy zu spoolman/storage)
+
+services:
+  spoolman:
+    image: ghcr.io/donkie/spoolman:latest
+    restart: unless-stopped
+    volumes:
+      - spoolman_data:/home/app/.local/share/spoolman
+    ports:
+      - "${SPOOLMAN_PORT:-8091}:8000"
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+
+  storage:
+    build: ./storage
+    restart: unless-stopped
+    volumes:
+      - storage_data:/data
+    environment:
+      - DB_PATH=/data/storage.db
+      - SPOOLMAN_URL=http://spoolman:8000/api/v1
+    depends_on:
+      - spoolman
+
+  dashboard:
+    build: ./dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-8093}:80"
+    depends_on:
+      - spoolman
+      - storage
+
+volumes:
+  spoolman_data:
+  storage_data:
