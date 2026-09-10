@@ -10,6 +10,10 @@ Produktiv-Infrastruktur (Docker Swarm, Traefik, HAProxy, GlusterFS), auf der das
 das heißt: läuft unverändert auf **Docker Desktop** (Windows/Mac) oder jedem Linux-Host mit
 Docker + Compose-Plugin.
 
+## Screenshot
+
+![Lagerplätze-Ansicht](docs/dashboard-screenshot.png)
+
 ## Voraussetzungen
 
 - Docker Desktop (Windows/Mac) oder Docker + Compose-Plugin (Linux)
