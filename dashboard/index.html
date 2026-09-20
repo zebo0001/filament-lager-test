@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Filament-Lager</title>
+<link rel='icon' type='image/svg+xml' href='favicon.svg'>
 <style>
   :root {
     color-scheme: dark;
@@ -35,16 +36,20 @@
     margin: 0 auto 2rem auto;
     text-align: center;
   }
+  .brand { display: flex; align-items: center; justify-content: center; gap: .65rem; }
+  .brand-logo { width: 2.5rem; height: 2.5rem; flex-shrink: 0; filter: drop-shadow(0 2px 8px rgba(56,189,248,.35)); }
+
   .hero h1 {
-    font-size: 2.2rem;
-    margin: 0 0 .4rem 0;
-    font-weight: 700;
+    font-size: 2.35rem;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -.02em;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
-  .hero p { color: var(--muted); margin: 0; font-size: 1rem; }
+  .hero p { color: var(--muted); margin: .5rem 0 0 0; font-size: 1rem; letter-spacing: .01em; opacity: .85; }
 
   .stats {
     max-width: 1100px;
@@ -102,7 +107,7 @@
     padding: .4rem .55rem;
     font-size: .85rem;
     width: 100%;
-  }
+  }select option{color:var(--text);background:var(--bg2);}
   input:focus, select:focus { outline: none; border-color: var(--accent); }
 
   .row-actions { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
@@ -123,7 +128,7 @@
   button.btn:hover { filter: brightness(1.08); }
   button.btn:disabled { opacity: .5; cursor: default; }
 
-  .amount-input { width: 4.5rem; display: inline-block; }
+  input.amount-input { width: 4.5rem !important; display: inline-block; }
 
   .muted { color: var(--muted); }
   .material-badge {
@@ -206,6 +211,7 @@
     gap: 1rem;
   }
   .device-card {
+  touch-action: none;
     background: rgba(0,0,0,0.18);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -223,7 +229,7 @@
   .slot-circle { cursor: pointer; transition: filter .1s; }
   .slot-circle:hover { filter: brightness(1.25); }
   .slot-reserved { cursor: help; }
-    .spool-name-link, .slot-circle { touch-action: none; }
+    #spool-content tr[data-id], .spool-name-link, .slot-circle { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     .spool-drag-chip {
       position: fixed; z-index: 99999; pointer-events: none;
       display: flex; align-items: center; gap: .5rem;
@@ -294,24 +300,95 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
 .mc-swatch { width: 1.2rem; height: 1.2rem; border-radius: 50%; flex: 0 0 auto; border: 1px solid rgba(255,255,255,.25); }
 #ns-multicolor-block label, #sd-multicolor-block label { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin: .5rem 0 .25rem 0; }
 #ns-multicolor-block select, #sd-multicolor-block select { margin-bottom: .5rem; width: 100%; }
+.hero-top { display: flex; align-items: center; justify-content: center; gap: .75rem; flex-wrap: wrap; position: relative; }
+.settings-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+@media (max-width: 640px) { .settings-btn { position: static; transform: none; margin-top: .5rem; } }
+.panel[data-panel="overview"] .stats { margin: 0; max-width: none; }
+.new-spool-panel { border: 1px solid rgba(56,189,248,.4); background: linear-gradient(135deg, rgba(56,189,248,.12), rgba(167,139,250,.12)); }
+.new-spool-panel-header { cursor: pointer; user-select: none; margin: 0; }
+.new-spool-panel .chevron { transition: transform .15s; font-size: .8rem; color: var(--muted); }
+.new-spool-panel.collapsed .chevron { transform: rotate(-90deg); }
+.new-spool-panel.collapsed .new-spool-panel-body { display: none; }
+.new-spool-panel-body { margin-top: .75rem; }
+.reorder-list { list-style: none; margin: 0 0 1rem 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.reorder-item { display: flex; align-items: center; justify-content: space-between; gap: .5rem; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 8px; padding: .5rem .7rem; font-size: .88rem; }
+/* Label-Designer */
+.labels-layout { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+.labels-sidebar { width: 220px; flex-shrink: 0; }
+.labels-template-list { list-style: none; margin: 0 0 .75rem 0; padding: 0; display: flex; flex-direction: column; gap: .3rem; max-height: 260px; overflow-y: auto; }
+.labels-template-item { display: flex; align-items: center; justify-content: space-between; gap: .4rem; padding: .45rem .6rem; border-radius: .35rem; border: 1px solid var(--border); background: rgba(255,255,255,.03); cursor: pointer; font-size: .85rem; }
+.labels-template-item:hover { border-color: var(--border-hover); }
+.labels-template-item.active { border-color: var(--accent); background: rgba(56,189,248,.1); }
+.labels-template-item .side-tag { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.labels-template-empty { color: var(--muted); font-size: .8rem; padding: .5rem 0; }
+.labels-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .6rem; }
+.labels-toolbar input[type="text"] { flex: 1; min-width: 8rem; padding: .4rem .6rem; border-radius: .35rem; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: inherit; }
+.labels-side-toggle { display: flex; border: 1px solid var(--border); border-radius: .35rem; overflow: hidden; }
+.labels-side-toggle button { border: none; background: transparent; color: var(--muted); padding: .4rem .8rem; cursor: pointer; font-size: .8rem; }
+.labels-side-toggle button.active { background: var(--accent); color: #04202e; font-weight: 600; }
+.labels-size-fields { display: flex; align-items: center; gap: .3rem; font-size: .8rem; color: var(--muted); }
+.labels-size-fields input { width: 4rem; padding: .3rem .4rem; border-radius: .3rem; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: inherit; }
+.labels-add-row { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem; }
+.labels-add-row button { font-size: .78rem; padding: .4rem .7rem; }
+.labels-workspace { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+.labels-canvas-wrap { background-color: #1b2536; background-image: linear-gradient(45deg, #151e2c 25%, transparent 25%), linear-gradient(-45deg, #151e2c 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #151e2c 75%), linear-gradient(-45deg, transparent 75%, #151e2c 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px; padding: 2rem; border-radius: .5rem; border: 1px solid var(--border); overflow: auto; }
+#label-canvas { position: relative; background: #ffffff; box-shadow: 0 6px 24px rgba(0,0,0,.45); overflow: hidden; }
+.label-el { position: absolute; box-sizing: border-box; cursor: move; border: 1px dashed transparent; display: flex; }
+.label-el:hover { border-color: rgba(56,189,248,.5); }
+.label-el.selected { border: 1px solid #38bdf8; box-shadow: 0 0 0 2px rgba(56,189,248,.25); }
+.label-el-text { align-items: center; overflow: hidden; white-space: nowrap; color: #111111; font-size: 3mm; line-height: 1.1; padding: 0 .5mm; }
+.label-el-qr { align-items: center; justify-content: center; background: #ffffff; }
+.label-el-qr-placeholder { width: 100%; height: 100%; background-image: repeating-linear-gradient(45deg, #111 0, #111 1.2px, #fff 1.2px, #fff 3px); display: flex; align-items: center; justify-content: center; position: relative; }
+.label-el-color { border-radius: .3mm; border: .3mm solid rgba(0,0,0,.15); }
+.label-el-rect { border-radius: .3mm; }
+.label-el-icon { align-items: center; justify-content: center; }
+.label-resize-handle { position: absolute; right: -4px; bottom: -4px; width: 9px; height: 9px; background: #38bdf8; border-radius: 2px; cursor: nwse-resize; }
+.label-props { width: 260px; flex-shrink: 0; background: var(--card); border: 1px solid var(--border); border-radius: .5rem; padding: .9rem; font-size: .85rem; }
+.label-props h4 { margin: 0 0 .6rem 0; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.label-props label { display: block; margin-bottom: .3rem; color: var(--muted); font-size: .75rem; }
+.label-props select, .label-props input[type="text"], .label-props input[type="number"] { width: 100%; margin-bottom: .6rem; padding: .35rem .5rem; border-radius: .3rem; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: inherit; box-sizing: border-box; }
+.label-props .prop-row { display: flex; gap: .4rem; }
+.label-props .prop-row > div { flex: 1; }
+.label-props .prop-check { display: flex; align-items: center; gap: .4rem; margin-bottom: .6rem; }
+.label-props .prop-check input { width: auto; margin: 0; }
+.label-props-empty { color: var(--muted); font-size: .8rem; text-align: center; padding: 2rem 0; }
+.labels-hint { font-size: .78rem; color: var(--muted); margin: -.3rem 0 .75rem 0; }
+
 </style>
 </head>
 <body>
 
 <div class="hero">
-  <h1>Filament-Lager</h1>
-  <p>Spulen im Blick &mdash; einchecken, auschecken, Verbrauch buchen, Lagerplätze visualisieren</p>
+<div class="hero-top">
+<div class='brand'><svg class='brand-logo' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'><defs><linearGradient id='logoGrad' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#38bdf8'/><stop offset='100%' stop-color='#a78bfa'/></linearGradient></defs><circle cx='24' cy='24' r='21' fill='#e2e8f0' opacity='.10'/><circle cx='24' cy='24' r='21' fill='none' stroke='url(#logoGrad)' stroke-width='3'/><circle cx='24' cy='24' r='14' fill='none' stroke='url(#logoGrad)' stroke-width='2' opacity='.6'/><circle cx='24' cy='24' r='7' fill='#5f5e5a'/><circle cx='24' cy='24' r='2.6' fill='#0f172a'/></svg><h1>Filament-Lager</h1></div>
+<button class="btn secondary settings-btn" id="settings-btn" type="button">&#9881; Einstellungen</button>
 </div>
-
-<div class="stats" id="stats">
-  <div class="stat"><div class="num" id="stat-count">&ndash;</div><div class="label">Spulen</div></div>
-  <div class="stat"><div class="num" id="stat-weight">&ndash;</div><div class="label">Rest gesamt</div></div>
-  <div class="stat"><div class="num warn-color" id="stat-low">&ndash;</div><div class="label">Fast leer (&lt;100g)</div></div>
+<p>Spulen im Blick &mdash; einchecken, auschecken, Verbrauch buchen, Lagerplätze visualisieren</p>
 </div>
 
 <main>
-  <div class="panel">
-    <h2>Spulen <a href="#" id="spoolman-link-top" target="_blank">Spoolman öffnen &rarr;</a> <button class="btn" id="new-spool-btn" type="button">+ Neue Spule</button></h2>
+<div class="panel" data-panel="overview">
+<h2>Gesamtübersicht</h2>
+<div class="stats" id="stats">
+<div class="stat"><div class="num" id="stat-count">&ndash;</div><div class="label">Spulen</div></div>
+<div class="stat"><div class="num" id="stat-weight">&ndash;</div><div class="label">Rest gesamt</div></div>
+<div class="stat"><div class="num warn-color" id="stat-low">&ndash;</div><div class="label">Fast leer (&lt;100g)</div></div>
+</div>
+</div>
+
+<div class="panel new-spool-panel" data-panel="new-spool" id="new-spool-panel">
+<h2 class="new-spool-panel-header" id="new-spool-panel-toggle"><span>&#10024; Neue Spule</span><span class="chevron" id="new-spool-chevron">&#9662;</span></h2>
+<div class="new-spool-panel-body" id="new-spool-panel-body">
+<p class="hint">Neue Spule anlegen oder die vollständige Spoolman-Oberfläche öffnen.</p>
+<div class="row-actions">
+<button class="btn" id="new-spool-btn" type="button">+ Neue Spule</button>
+<button class="btn secondary" id="spoolman-open-btn" type="button">Spoolman öffnen &rarr;</button>
+</div>
+</div>
+</div>
+
+<div class="panel" data-panel="spools">
+<h2>Spulen</h2>
     <p class="hint">Standort kommt direkt aus den Lagerplätzen &mdash; kein manuelles Eintippen mehr. Über &bdquo;Auf Drucker/ACE&ldquo; bzw. &bdquo;In Drybox&ldquo; wird ein freier Platz zugewiesen (Spoolman-Standort wird automatisch aktualisiert). Ist eine Rolle leer, markiert &bdquo;Rolle leer&ldquo; sie in Spoolman als archiviert, gibt den Platz frei und setzt einen Eintrag auf die Einkaufsliste.</p>
     <div class="spool-toolbar">
       <input type="text" id="spool-search" class="spool-search-input" placeholder="Suche: Name, Material, Hersteller, Farbe...">
@@ -331,8 +408,8 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
     </style>
   </div>
 
-  <div class="panel">
-    <h2>Lagerplätze</h2>
+  <div class="panel" data-panel="units">
+<h2>Lagerplätze</h2>
     <p class="hint">Geräte anlegen (Drybox, ACE, Drucker, &hellip;), bei Bedarf mehrere Reihen pro Ebene angeben (z.&nbsp;B. 2, wenn Spulen hintereinander liegen) und Spulen auf konkrete Plätze legen. Bei Druckern mit ACE-Zuführung kann ein Platz als reserviert markiert werden (bleibt auch bei mehreren gekoppelten ACE-Einheiten über einen Hub an derselben Position). Der Standort wird automatisch zu Spoolman zurückgeschrieben.</p>
 
     <div class="add-device-form">
@@ -373,8 +450,8 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
     <div id="device-content"><div class="empty">Lade&hellip;</div></div>
   </div>
 
-  <div class="panel">
-    <h2>Einkaufsliste</h2>
+  <div class="panel" data-panel="shopping">
+<h2>Einkaufsliste</h2>
     <p class="hint">Wird automatisch befüllt, wenn eine leere Spule über &bdquo;Rolle leer&ldquo; aus dem System genommen wird. Einträge können hier auch manuell ergänzt oder entfernt werden.</p>
 
     <div class="add-device-form">
@@ -401,6 +478,56 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
 
     <div id="shopping-content"><div class="empty">Lade&hellip;</div></div>
   </div>
+<div class="panel" data-panel="labels">
+  <h2>Label-Designer</h2>
+  <p class="hint">Eigene Layouts fuer Plastikkarten (z.B. 85x55mm) frei gestalten, speichern und fuer den Kartendruck exportieren.</p>
+  <div class="labels-layout">
+    <div class="labels-sidebar">
+      <button class="btn" id="ld-new-btn" type="button" style="width:100%;margin-bottom:.6rem;">+ Neue Vorlage</button>
+      <ul class="labels-template-list" id="ld-template-list"></ul>
+    </div>
+    <div style="flex:1;min-width:320px;">
+      <div class="labels-toolbar">
+        <input type="text" id="ld-name-input" placeholder="Name der Vorlage">
+        <div class="labels-side-toggle">
+          <button type="button" id="ld-side-front" class="active">Vorderseite</button>
+          <button type="button" id="ld-side-back">Rueckseite</button>
+        </div>
+        <div class="labels-size-fields">
+          <span>B</span><input type="number" id="ld-width-input" value="85" step="0.5" min="10">
+          <span>H</span><input type="number" id="ld-height-input" value="55" step="0.5" min="10">
+          <span>mm</span>
+        </div>
+      </div>
+      <div class="labels-toolbar">
+        <select id="ld-spool-picker" style="flex:1;min-width:10rem;padding:.4rem .6rem;border-radius:.35rem;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:inherit;">
+          <option value="">Vorschau: Beispieldaten</option>
+        </select>
+        <button class="btn secondary" id="ld-duplicate-btn" type="button">Duplizieren</button>
+        <button class="btn secondary danger" id="ld-delete-btn" type="button">Loeschen</button>
+        <button class="btn" id="ld-save-btn" type="button">Speichern</button>
+        <button class="btn secondary" id="ld-export-png-btn" type="button">Export PNG</button>
+        <button class="btn secondary" id="ld-export-pdf-btn" type="button">Export PDF</button>
+      </div>
+      <div class="labels-add-row">
+        <button class="btn secondary" type="button" data-add="text">+ Text/Feld</button>
+        <button class="btn secondary" type="button" data-add="qr">+ QR-Code</button>
+        <button class="btn secondary" type="button" data-add="color">+ Farbfeld</button>
+        <button class="btn secondary" type="button" data-add="rect">+ Rechteck</button>
+        <button class="btn secondary" type="button" data-add="icon">+ Spulen-Icon</button>
+      </div>
+      <div class="labels-workspace">
+        <div class="labels-canvas-wrap">
+          <div id="label-canvas"></div>
+        </div>
+        <div class="label-props" id="ld-props">
+          <div class="label-props-empty">Element auswaehlen, um Eigenschaften zu bearbeiten.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <div class="links">
@@ -551,6 +678,7 @@ Filament-Typ
 <script>
 const SP = '/api/spoolman';
 const ST = '/api/storage';
+
 
 function toast(msg, kind) {
   const t = document.getElementById('toast');
@@ -705,7 +833,9 @@ function renderSpoolTable() {
     const clearBtn = tr.querySelector('.chk-clear');
     if (clearBtn) clearBtn.addEventListener('click', () => clearSpoolSlot(id));
     tr.querySelector('.chk-retire').addEventListener('click', () => retireSpool(id));
-    tr.querySelector('.use-save').addEventListener('click', () => bookUsage(id, tr.querySelector('.use-amount').value));
+    const useAmountInput = tr.querySelector(".use-amount");
+tr.querySelector(".use-save").addEventListener("click", () => bookUsage(id, useAmountInput.value));
+useAmountInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); bookUsage(id, useAmountInput.value); } });
   });
 
   renderSpoolPagination(pagEl, spoolPage, totalPages, filtered.length);
@@ -1260,17 +1390,23 @@ function onSpoolDragPointerDown(e) {
   // Verhindert Text-/Native-Drag-Selektion des Browsers waehrend unseres eigenen Drags.
   e.preventDefault();
 
+  try { if (sourceEl && sourceEl.setPointerCapture) sourceEl.setPointerCapture(e.pointerId); } catch (err) {}
+
   const startX = e.clientX, startY = e.clientY;
   let started = false;
   let chip = null;
   let hoveredSlotEl = null;
+  let lastClientX = null;
+  let lastClientY = null;
 
   const clearSlotHover = () => {
     if (hoveredSlotEl) { hoveredSlotEl.classList.remove('drop-target'); hoveredSlotEl = null; }
   };
 
   const onMove = (ev) => {
+    ev.preventDefault();
     const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    lastClientX = ev.clientX; lastClientY = ev.clientY;
     if (!started) {
       if (Math.hypot(dx, dy) < 8) return;
       started = true;
@@ -1302,9 +1438,12 @@ function onSpoolDragPointerDown(e) {
     clearSlotHover();
     if (!started) { return; }
     if (chip) chip.remove();
-    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const badCoords = (ev.clientX === 0 && ev.clientY === 0);
+    const ux = (badCoords && lastClientX !== null) ? lastClientX : ev.clientX;
+    const uy = (badCoords && lastClientY !== null) ? lastClientY : ev.clientY;
+    const el = document.elementFromPoint(ux, uy);
     const card = el ? el.closest('.device-card') : null;
-    const slotEl = findNearestSlotInCard(card, ev.clientX, ev.clientY);
+    const slotEl = findNearestSlotInCard(card, ux, uy);
     const panelEl = document.getElementById('spool-content');
     const panel = panelEl ? panelEl.closest('.panel') : null;
     const overPanel = !!(panel && el && panel.contains(el));
@@ -1315,9 +1454,9 @@ function onSpoolDragPointerDown(e) {
     }
   };
 
-  document.addEventListener('pointermove', onMove);
-  document.addEventListener('pointerup', onUp);
-  document.addEventListener('pointercancel', onUp);
+  document.addEventListener('pointermove', onMove, { passive: false });
+  document.addEventListener('pointerup', onUp, { passive: false });
+  document.addEventListener('pointercancel', onUp, { passive: false });
 }
 
 function onSpoolDragClickCapture(e) {
@@ -2031,7 +2170,650 @@ async function init() {
   await loadShoppingList();
 }
 init();
+
+document.addEventListener('DOMContentLoaded', function() {
+const PANEL_IDS = ["overview", "new-spool", "units", "spools", "shopping", "labels"];
+const PANEL_TITLES = { overview: "Gesamtübersicht", "new-spool": "Neue Spule", units: "Lagerplätze", spools: "Spulen", shopping: "Einkaufsliste", labels: "Label-Designer" };
+
+function applyPanelOrder(order) {
+const mainEl = document.querySelector("main");
+if (!mainEl) return;
+const valid = (order || []).filter(id => PANEL_IDS.includes(id));
+PANEL_IDS.forEach(id => { if (!valid.includes(id)) valid.push(id); });
+valid.forEach(id => {
+const el = mainEl.querySelector('[data-panel="' + id + '"]');
+if (el) mainEl.appendChild(el);
+});
+}
+
+async function loadPanelOrder() {
+try {
+const data = await api(ST + "/layout");
+applyPanelOrder(data && data.order ? data.order : PANEL_IDS);
+} catch (e) {
+applyPanelOrder(PANEL_IDS);
+}
+}
+
+function currentPanelOrder() {
+const mainEl = document.querySelector("main");
+return Array.from(mainEl.children).map(el => el.dataset.panel).filter(Boolean);
+}
+
+function renderReorderList(order) {
+const list = document.getElementById("reorder-list");
+list.innerHTML = order.map(id =>
+'<li class="reorder-item" data-panel="' + id + '">' +
+"<span>" + (PANEL_TITLES[id] || id) + "</span>" +
+'<div class="row-actions">' +
+'<button type="button" class="btn secondary icon-only reorder-up">&uarr;</button>' +
+'<button type="button" class="btn secondary icon-only reorder-down">&darr;</button>' +
+"</div></li>"
+).join("");
+wireReorderButtons();
+updateReorderButtonStates();
+}
+
+function wireReorderButtons() {
+const list = document.getElementById("reorder-list");
+list.querySelectorAll(".reorder-up").forEach(btn => {
+btn.onclick = () => {
+const li = btn.closest("li");
+const prev = li.previousElementSibling;
+if (prev) list.insertBefore(li, prev);
+updateReorderButtonStates();
+};
+});
+list.querySelectorAll(".reorder-down").forEach(btn => {
+btn.onclick = () => {
+const li = btn.closest("li");
+const next = li.nextElementSibling;
+if (next) list.insertBefore(next, li);
+updateReorderButtonStates();
+};
+});
+}
+
+function updateReorderButtonStates() {
+const list = document.getElementById("reorder-list");
+const items = Array.from(list.children);
+items.forEach((li, idx) => {
+li.querySelector(".reorder-up").disabled = (idx === 0);
+li.querySelector(".reorder-down").disabled = (idx === items.length - 1);
+});
+}
+
+function openSettingsModal() {
+renderReorderList(currentPanelOrder());
+document.getElementById("settings-overlay").classList.add("show");
+}
+
+function closeSettingsModal() {
+document.getElementById("settings-overlay").classList.remove("show");
+}
+
+async function saveSettingsOrder() {
+const list = document.getElementById("reorder-list");
+const order = Array.from(list.children).map(li => li.dataset.panel);
+try {
+await api(ST + "/layout", { method: "PUT", body: JSON.stringify({ order }) });
+applyPanelOrder(order);
+toast("Reihenfolge gespeichert", "ok");
+closeSettingsModal();
+} catch (e) {
+toast("Fehler: " + e.message, "err");
+}
+}
+
+document.getElementById("settings-btn").addEventListener("click", openSettingsModal);
+document.getElementById("settings-cancel").addEventListener("click", closeSettingsModal);
+document.getElementById("settings-save").addEventListener("click", saveSettingsOrder);
+
+document.getElementById("new-spool-panel-toggle").addEventListener("click", () => {
+document.getElementById("new-spool-panel").classList.toggle("collapsed");
+});
+
+document.getElementById("spoolman-open-btn").addEventListener("click", () => {
+window.open(location.protocol + '//' + location.hostname + ':' + (window.__SPOOLMAN_PORT__ || '8091'), "_blank");
+});
+
+// ---------- Label-Designer ----------
+let ldTemplates = [];
+let ldFields = [];
+let ldCurrentTemplate = null;
+let ldSelectedElId = null;
+let ldSelectedSpoolId = "";
+let ldDragInfo = null;
+
+function ldEscapeHtml(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+async function ldInit() {
+  const addRow = document.querySelector(".labels-add-row");
+  if (!addRow) return;
+  document.getElementById("ld-new-btn").addEventListener("click", ldNewTemplate);
+  document.getElementById("ld-duplicate-btn").addEventListener("click", ldDuplicateTemplate);
+  document.getElementById("ld-delete-btn").addEventListener("click", ldDeleteTemplate);
+  document.getElementById("ld-save-btn").addEventListener("click", ldSaveTemplate);
+  document.getElementById("ld-side-front").addEventListener("click", () => ldSetSide("front"));
+  document.getElementById("ld-side-back").addEventListener("click", () => ldSetSide("back"));
+  document.getElementById("ld-width-input").addEventListener("change", ldApplySize);
+  document.getElementById("ld-height-input").addEventListener("change", ldApplySize);
+  document.getElementById("ld-name-input").addEventListener("change", (e) => {
+    if (ldCurrentTemplate) ldCurrentTemplate.name = e.target.value;
+    ldRenderTemplateList();
+  });
+  document.getElementById("ld-spool-picker").addEventListener("change", (e) => {
+    ldSelectedSpoolId = e.target.value;
+    ldRenderCanvas();
+  });
+  addRow.querySelectorAll("button[data-add]").forEach((btn) => {
+    btn.addEventListener("click", () => ldAddElement(btn.dataset.add));
+  });
+  document.addEventListener("mousemove", ldOnDragMove);
+  document.addEventListener("mouseup", ldOnDragEnd);
+  await ldLoadFields();
+  ldFillSpoolPicker();
+  await ldLoadTemplates();
+  document.getElementById("ld-export-png-btn").addEventListener("click", () => ldExportLabel("png"));
+  document.getElementById("ld-export-pdf-btn").addEventListener("click", () => ldExportLabel("pdf"));
+}
+
+async function ldExportLabel(fmt) {
+  if (!ldCurrentTemplate || !ldCurrentTemplate.id) { toast("Vorlage zuerst speichern", "error"); return; }
+  if (!ldSelectedSpoolId) { toast("Bitte zuerst eine Spule waehlen", "error"); return; }
+  try {
+    const res = await fetch(ST + "/label-templates/" + ldCurrentTemplate.id + "/export", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({spool_ids: [ldSelectedSpoolId], format: fmt, dpi: 300})
+    });
+    if (!res.ok) {
+      let d = "";
+      try { d = await res.text(); } catch (e) {}
+      throw new Error("HTTP " + res.status + (d ? ": " + d.slice(0,200) : ""));
+    }
+    const blob = await res.blob();
+    let filename = "label." + fmt;
+    const cd = res.headers.get("Content-Disposition");
+    if (cd) {
+      const m = cd.match(/filename="?([^"]+)"?/);
+      if (m) filename = m[1];
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) {
+    toast("Export fehlgeschlagen: " + e.message, "error");
+  }
+}
+
+function ldFillSpoolPicker() {
+  const sel = document.getElementById("ld-spool-picker");
+  if (!sel) return;
+  const opts = [ "<option value=\"\">Vorschau: Beispieldaten</option>" ];
+  allSpools.forEach((s) => {
+    const label = "#" + s.id + " " + (s.filament && s.filament.name ? s.filament.name : "Spule");
+    opts.push("<option value=\"" + s.id + "\">" + ldEscapeHtml(label) + "</option>");
+  });
+  sel.innerHTML = opts.join("");
+}
+async function ldLoadFields() {
+  try {
+    ldFields = await api(ST + "/label-fields");
+  } catch (e) {
+    ldFields = [];
+  }
+}
+
+async function ldLoadTemplates() {
+  try {
+    ldTemplates = await api(ST + "/label-templates");
+  } catch (e) {
+    ldTemplates = [];
+  }
+  ldRenderTemplateList();
+  if (ldTemplates.length) {
+    ldSelectTemplate(ldTemplates[0].id);
+  } else {
+    ldNewTemplate();
+  }
+}
+
+function ldRenderTemplateList() {
+  const list = document.getElementById("ld-template-list");
+  if (!list) return;
+  if (!ldTemplates.length) {
+    list.innerHTML = "<li class=\"labels-template-empty\">Noch keine Vorlagen gespeichert.</li>";
+    return;
+  }
+  list.innerHTML = ldTemplates.map((t) => {
+    const active = ldCurrentTemplate && ldCurrentTemplate.id === t.id ? " active" : "";
+    const sideLabel = t.side === "back" ? "Rueckseite" : "Vorderseite";
+    return "<li class=\"labels-template-item" + active + "\" data-id=\"" + t.id + "\"><span>" + ldEscapeHtml(t.name) + "</span><span class=\"side-tag\">" + sideLabel + "</span></li>";
+  }).join("");
+  list.querySelectorAll(".labels-template-item").forEach((el) => {
+    el.addEventListener("click", () => ldSelectTemplate(Number(el.dataset.id)));
+  });
+}
+
+function ldSelectTemplate(id) {
+  const t = ldTemplates.find((x) => x.id === id);
+  if (!t) return;
+  ldCurrentTemplate = JSON.parse(JSON.stringify(t));
+  ldSelectedElId = null;
+  ldRenderAll();
+}
+
+function ldNewTemplate() {
+  ldCurrentTemplate = { id: null, name: "Neue Vorlage", side: "front", width_mm: 85, height_mm: 55, elements: [] };
+  ldSelectedElId = null;
+  ldRenderAll();
+}
+async function ldSaveTemplate() {
+  if (!ldCurrentTemplate) return;
+  const payload = {
+    name: ldCurrentTemplate.name || "Ohne Namen",
+    side: ldCurrentTemplate.side,
+    width_mm: ldCurrentTemplate.width_mm,
+    height_mm: ldCurrentTemplate.height_mm,
+    elements: ldCurrentTemplate.elements
+  };
+  try {
+    let saved;
+    if (ldCurrentTemplate.id) {
+      saved = await api(ST + "/label-templates/" + ldCurrentTemplate.id, { method: "PUT", body: JSON.stringify(payload) });
+    } else {
+      saved = await api(ST + "/label-templates", { method: "POST", body: JSON.stringify(payload) });
+    }
+    await ldLoadTemplates();
+    ldSelectTemplate(saved.id);
+    toast("Vorlage gespeichert", "ok");
+  } catch (e) {
+    toast("Fehler beim Speichern: " + e.message, "err");
+  }
+}
+async function ldDuplicateTemplate() {
+  if (!ldCurrentTemplate || !ldCurrentTemplate.id) {
+    toast("Vorlage zuerst speichern", "err");
+    return;
+  }
+  try {
+    const copy = await api(ST + "/label-templates/" + ldCurrentTemplate.id + "/duplicate", { method: "POST" });
+    await ldLoadTemplates();
+    ldSelectTemplate(copy.id);
+    toast("Vorlage dupliziert", "ok");
+  } catch (e) {
+    toast("Fehler: " + e.message, "err");
+  }
+}
+
+async function ldDeleteTemplate() {
+  if (!ldCurrentTemplate || !ldCurrentTemplate.id) {
+    ldNewTemplate();
+    return;
+  }
+  if (!confirm("Vorlage " + ldCurrentTemplate.name + " wirklich loeschen?")) return;
+  try {
+    await api(ST + "/label-templates/" + ldCurrentTemplate.id, { method: "DELETE" });
+    await ldLoadTemplates();
+    toast("Vorlage geloescht", "ok");
+  } catch (e) {
+    toast("Fehler: " + e.message, "err");
+  }
+}
+function ldSetSide(side) {
+  if (!ldCurrentTemplate) return;
+  ldCurrentTemplate.side = side;
+  ldRenderAll();
+}
+
+function ldApplySize() {
+  if (!ldCurrentTemplate) return;
+  const w = parseFloat(document.getElementById("ld-width-input").value) || 85;
+  const h = parseFloat(document.getElementById("ld-height-input").value) || 55;
+  ldCurrentTemplate.width_mm = w;
+  ldCurrentTemplate.height_mm = h;
+  ldRenderCanvas();
+}
+
+function ldAddElement(type) {
+  if (!ldCurrentTemplate) return;
+  const id = "el" + Date.now() + Math.floor(Math.random() * 1000);
+  const base = { id: id, type: type, x: 4, y: 4, w: 30, h: 10 };
+  if (type === "text") {
+    base.w = 40; base.h = 8;
+    base.field = "filament.name";
+    base.staticText = "";
+    base.fontSize = 3.2;
+    base.bold = false;
+    base.align = "left";
+    base.color = "#111111";
+  } else if (type === "qr") {
+    base.w = 20; base.h = 20;
+    base.field = "spool.id";
+  } else if (type === "color") {
+    base.w = 12; base.h = 12;
+  } else if (type === "rect") {
+    base.w = 30; base.h = 15;
+    base.fill = "#38bdf8";
+    base.border = false;
+  } else if (type === "icon") {
+    base.w = 16; base.h = 16;
+  }
+  ldCurrentTemplate.elements.push(base);
+  ldSelectedElId = id;
+  ldRenderAll();
+}
+function ldDeleteElement(id) {
+  if (!ldCurrentTemplate) return;
+  ldCurrentTemplate.elements = ldCurrentTemplate.elements.filter((e) => e.id !== id);
+  if (ldSelectedElId === id) ldSelectedElId = null;
+  ldRenderAll();
+}
+
+function ldSelectElement(id) {
+  ldSelectedElId = id;
+  ldRenderAll();
+}
+
+function ldGetPreviewSpool() {
+  if (ldSelectedSpoolId) {
+    const s = allSpools.find((x) => String(x.id) === String(ldSelectedSpoolId));
+    if (s) return s;
+  }
+  return {
+    id: 123,
+    remaining_weight: 742,
+    location: "Drybox 1 / Fach 3",
+    extra: {},
+    filament: {
+      name: "Beispiel PLA",
+      material: "PLA",
+      color_hex: "38BDF8",
+      diameter: 1.75,
+      density: 1.24,
+      settings_extruder_temp: 210,
+      settings_bed_temp: 60,
+      weight: 1000,
+      article_number: "DEMO-001",
+      vendor: { name: "Demo-Hersteller" },
+      extra: {}
+    }
+  };
+}
+function ldResolveField(key, spool) {
+  if (!key || key === "static") return "";
+  const parts = key.split(".");
+  let obj = spool;
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    if (p === "extra" && obj) {
+      const extra = obj.extra || {};
+      const rest = parts.slice(i + 1).join(".");
+      let v = extra[rest];
+      if (typeof v === "string") {
+        try { v = JSON.parse(v); } catch (e) {}
+      }
+      return v == null ? "" : v;
+    }
+    if (obj == null) return "";
+    obj = obj[p];
+  }
+  return obj == null ? "" : obj;
+}
+
+function ldFieldLabel(key) {
+  const f = ldFields.find((x) => x.key === key);
+  return f ? f.label : key;
+}
+
+function ldGetColor(spool) {
+  const hex = spool && spool.filament && spool.filament.color_hex ? spool.filament.color_hex : "888888";
+  return "#" + String(hex).replace("#", "").split(",")[0];
+}
+
+function ldRenderAll() {
+  ldRenderTemplateList();
+  ldRenderToolbar();
+  ldRenderCanvas();
+  ldRenderProps();
+}
+function ldRenderToolbar() {
+  if (!ldCurrentTemplate) return;
+  document.getElementById("ld-name-input").value = ldCurrentTemplate.name || "";
+  document.getElementById("ld-width-input").value = ldCurrentTemplate.width_mm;
+  document.getElementById("ld-height-input").value = ldCurrentTemplate.height_mm;
+  document.getElementById("ld-side-front").classList.toggle("active", ldCurrentTemplate.side !== "back");
+  document.getElementById("ld-side-back").classList.toggle("active", ldCurrentTemplate.side === "back");
+  document.getElementById("ld-delete-btn").style.display = ldCurrentTemplate.id ? "" : "none";
+  document.getElementById("ld-duplicate-btn").style.display = ldCurrentTemplate.id ? "" : "none";
+}
+
+function ldRenderCanvas() {
+  const canvas = document.getElementById("label-canvas");
+  if (!canvas || !ldCurrentTemplate) return;
+  canvas.style.width = ldCurrentTemplate.width_mm + "mm";
+  canvas.style.height = ldCurrentTemplate.height_mm + "mm";
+  const spool = ldGetPreviewSpool();
+  canvas.innerHTML = "";
+  ldCurrentTemplate.elements.forEach((el) => {
+    const div = document.createElement("div");
+    div.className = "label-el" + (el.id === ldSelectedElId ? " selected" : "");
+    div.style.left = el.x + "mm";
+    div.style.top = el.y + "mm";
+    div.style.width = el.w + "mm";
+    div.style.height = el.h + "mm";
+    div.dataset.id = el.id;
+    div.appendChild(ldBuildElementContent(el, spool));
+    if (el.id === ldSelectedElId) {
+      const handle = document.createElement("div");
+      handle.className = "label-resize-handle";
+      handle.addEventListener("mousedown", (ev) => {
+        ev.stopPropagation();
+        ldDragInfo = { id: el.id, mode: "resize", startX: ev.clientX, startY: ev.clientY, orig: { x: el.x, y: el.y, w: el.w, h: el.h } };
+      });
+      div.appendChild(handle);
+    }
+    div.addEventListener("mousedown", (ev) => {
+      if (ev.target !== div && ev.target.className === "label-resize-handle") return;
+      ev.stopPropagation();
+      ldSelectElement(el.id);
+      ldDragInfo = { id: el.id, mode: "move", startX: ev.clientX, startY: ev.clientY, orig: { x: el.x, y: el.y, w: el.w, h: el.h } };
+    });
+    canvas.appendChild(div);
+  });
+}
+function ldBuildElementContent(el, spool) {
+  const wrap = document.createElement("div");
+  if (el.type === "text") {
+    wrap.className = "label-el-text";
+    wrap.style.fontSize = (el.fontSize || 3.2) + "mm";
+    wrap.style.fontWeight = el.bold ? "700" : "400";
+    wrap.style.justifyContent = el.align === "center" ? "center" : (el.align === "right" ? "flex-end" : "flex-start");
+    wrap.style.color = el.color || "#111111";
+    wrap.style.width = "100%";
+    let text = "";
+    if (!el.field || el.field === "static") {
+      text = el.staticText || "";
+    } else {
+      const v = ldResolveField(el.field, spool);
+      text = v == null ? "" : String(v);
+    }
+    wrap.textContent = text;
+  } else if (el.type === "qr") {
+    wrap.className = "label-el-qr";
+    wrap.style.width = "100%";
+    wrap.style.height = "100%";
+    const ph = document.createElement("div");
+    ph.className = "label-el-qr-placeholder";
+    ph.style.position = "relative";
+    ph.style.width = "100%";
+    ph.style.height = "100%";
+    const iconWrap = document.createElement("div");
+    iconWrap.style.position = "absolute";
+    iconWrap.style.left = "50%";
+    iconWrap.style.top = "50%";
+    iconWrap.style.transform = "translate(-50%, -50%)";
+    iconWrap.style.width = "38%";
+    iconWrap.style.height = "38%";
+    iconWrap.style.background = "#ffffff";
+    iconWrap.style.borderRadius = "20%";
+    iconWrap.style.display = "flex";
+    iconWrap.style.alignItems = "center";
+    iconWrap.style.justifyContent = "center";
+    iconWrap.innerHTML = ldSpoolIconSvg(ldGetColor(spool));
+    ph.appendChild(iconWrap);
+    wrap.appendChild(ph);
+  } else if (el.type === "color") {
+    wrap.className = "label-el-color";
+    wrap.style.width = "100%";
+    wrap.style.height = "100%";
+    wrap.style.background = ldGetColor(spool);
+  } else if (el.type === "rect") {
+    wrap.className = "label-el-rect";
+    wrap.style.width = "100%";
+    wrap.style.height = "100%";
+    wrap.style.background = el.fill || "#38bdf8";
+    if (el.border) wrap.style.border = "0.3mm solid #111111";
+  } else if (el.type === "icon") {
+    wrap.className = "label-el-icon";
+    wrap.style.width = "100%";
+    wrap.style.height = "100%";
+    wrap.innerHTML = ldSpoolIconSvg(ldGetColor(spool));
+  }
+  return wrap;
+}
+function ldSpoolIconSvg(color) {
+  return "<svg viewBox=\"0 0 100 100\" style=\"width:100%;height:100%\"><circle cx=\"50\" cy=\"50\" r=\"46\" fill=\"" + color + "\" stroke=\"#00000022\" stroke-width=\"2\"></circle><circle cx=\"50\" cy=\"50\" r=\"16\" fill=\"#ffffff\"></circle><circle cx=\"50\" cy=\"50\" r=\"16\" fill=\"none\" stroke=\"#00000022\" stroke-width=\"2\"></circle></svg>";
+}
+
+function ldOnDragMove(ev) {
+  if (!ldDragInfo || !ldCurrentTemplate) return;
+  const canvas = document.getElementById("label-canvas");
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const mmPerPxX = ldCurrentTemplate.width_mm / rect.width;
+  const mmPerPxY = ldCurrentTemplate.height_mm / rect.height;
+  const dx = (ev.clientX - ldDragInfo.startX) * mmPerPxX;
+  const dy = (ev.clientY - ldDragInfo.startY) * mmPerPxY;
+  const el = ldCurrentTemplate.elements.find((e) => e.id === ldDragInfo.id);
+  if (!el) return;
+  if (ldDragInfo.mode === "move") {
+    el.x = Math.max(0, Math.min(ldCurrentTemplate.width_mm - el.w, ldDragInfo.orig.x + dx));
+    el.y = Math.max(0, Math.min(ldCurrentTemplate.height_mm - el.h, ldDragInfo.orig.y + dy));
+  } else if (ldDragInfo.mode === "resize") {
+    el.w = Math.max(4, Math.min(ldCurrentTemplate.width_mm - el.x, ldDragInfo.orig.w + dx));
+    el.h = Math.max(4, Math.min(ldCurrentTemplate.height_mm - el.y, ldDragInfo.orig.h + dy));
+  }
+  ldRenderCanvas();
+}
+
+function ldOnDragEnd() {
+  ldDragInfo = null;
+}
+function ldRenderProps() {
+  const box = document.getElementById("ld-props");
+  if (!box) return;
+  if (!ldCurrentTemplate || !ldSelectedElId) {
+    box.innerHTML = "<div class=\"label-props-empty\">Element auswaehlen, um Eigenschaften zu bearbeiten.</div>";
+    return;
+  }
+  const el = ldCurrentTemplate.elements.find((e) => e.id === ldSelectedElId);
+  if (!el) {
+    box.innerHTML = "<div class=\"label-props-empty\">Element auswaehlen, um Eigenschaften zu bearbeiten.</div>";
+    return;
+  }
+  let html = "<h4>" + ldTypeLabel(el.type) + "</h4>";
+  if (el.type === "text") {
+    html += "<label>Datenquelle</label><select id=\"ld-p-field\">" + ldFieldOptions(el.field) + "</select>";
+    html += "<label>Statischer Text (falls kein Feld)</label><input type=\"text\" id=\"ld-p-static\" value=\"" + ldEscapeHtml(el.staticText || "") + "\">";
+    html += "<div class=\"prop-row\"><div><label>Schriftgroesse (mm)</label><input type=\"number\" id=\"ld-p-fontsize\" step=\"0.1\" value=\"" + el.fontSize + "\"></div>";
+    html += "<div><label>Ausrichtung</label><select id=\"ld-p-align\"><option value=\"left\"" + (el.align === "left" ? " selected" : "") + ">Links</option><option value=\"center\"" + (el.align === "center" ? " selected" : "") + ">Mitte</option><option value=\"right\"" + (el.align === "right" ? " selected" : "") + ">Rechts</option></select></div></div>";
+    html += "<div class=\"prop-check\"><input type=\"checkbox\" id=\"ld-p-bold\"" + (el.bold ? " checked" : "") + "><label style=\"margin:0\">Fett</label></div>";
+    html += "<label>Textfarbe</label><input type=\"text\" id=\"ld-p-color\" value=\"" + ldEscapeHtml(el.color || "#111111") + "\">";
+  } else if (el.type === "qr") {
+    html += "<label>Inhalt des QR-Codes</label><select id=\"ld-p-field\">" + ldFieldOptions(el.field) + "</select>";
+    html += "<p class=\"labels-hint\">Das Spulen-Icon wird beim Export automatisch in der Filamentfarbe eingebettet.</p>";
+  } else if (el.type === "rect") {
+    html += "<label>Fuellfarbe</label><input type=\"text\" id=\"ld-p-fill\" value=\"" + ldEscapeHtml(el.fill || "#38bdf8") + "\">";
+    html += "<div class=\"prop-check\"><input type=\"checkbox\" id=\"ld-p-border\"" + (el.border ? " checked" : "") + "><label style=\"margin:0\">Rahmen</label></div>";
+  } else if (el.type === "color") {
+    html += "<p class=\"labels-hint\">Zeigt automatisch die Filamentfarbe der gewaehlten Spule.</p>";
+  } else if (el.type === "icon") {
+    html += "<p class=\"labels-hint\">Spulen-Icon in der Filamentfarbe.</p>";
+  }
+  html += "<div class=\"prop-row\"><div><label>X (mm)</label><input type=\"number\" id=\"ld-p-x\" step=\"0.5\" value=\"" + el.x + "\"></div><div><label>Y (mm)</label><input type=\"number\" id=\"ld-p-y\" step=\"0.5\" value=\"" + el.y + "\"></div></div>";
+  html += "<div class=\"prop-row\"><div><label>Breite (mm)</label><input type=\"number\" id=\"ld-p-w\" step=\"0.5\" value=\"" + el.w + "\"></div><div><label>Hoehe (mm)</label><input type=\"number\" id=\"ld-p-h\" step=\"0.5\" value=\"" + el.h + "\"></div></div>";
+  html += "<button class=\"btn secondary danger\" id=\"ld-p-delete\" type=\"button\" style=\"width:100%\">Element loeschen</button>";
+  box.innerHTML = html;
+  ldWireProps(el);
+}
+function ldTypeLabel(type) {
+  if (type === "text") return "Text / Feld";
+  if (type === "qr") return "QR-Code";
+  if (type === "color") return "Farbfeld";
+  if (type === "rect") return "Rechteck";
+  if (type === "icon") return "Spulen-Icon";
+  return type;
+}
+
+function ldFieldOptions(current) {
+  let opts = "<option value=\"static\"" + (!current || current === "static" ? " selected" : "") + ">-- Freitext --</option>";
+  ldFields.forEach((f) => {
+    opts += "<option value=\"" + f.key + "\"" + (current === f.key ? " selected" : "") + ">" + ldEscapeHtml(f.label) + "</option>";
+  });
+  return opts;
+}
+function ldWireProps(el) {
+  const bind = (id, prop, isCheckbox, isNumber) => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.addEventListener("change", () => {
+      el[prop] = isCheckbox ? node.checked : (isNumber ? parseFloat(node.value) || 0 : node.value);
+      ldRenderCanvas();
+    });
+  };
+  bind("ld-p-field", "field", false, false);
+  bind("ld-p-static", "staticText", false, false);
+  bind("ld-p-fontsize", "fontSize", false, true);
+  bind("ld-p-align", "align", false, false);
+  bind("ld-p-bold", "bold", true, false);
+  bind("ld-p-color", "color", false, false);
+  bind("ld-p-fill", "fill", false, false);
+  bind("ld-p-border", "border", true, false);
+  bind("ld-p-x", "x", false, true);
+  bind("ld-p-y", "y", false, true);
+  bind("ld-p-w", "w", false, true);
+  bind("ld-p-h", "h", false, true);
+  const del = document.getElementById("ld-p-delete");
+  if (del) del.addEventListener("click", () => ldDeleteElement(el.id));
+}
+
+
+  loadPanelOrder();
+  ldInit();
+});
 </script>
+
+<div class="assign-overlay" id="settings-overlay">
+<div class="assign-box">
+<h3>Reihenfolge anpassen</h3>
+<p class="slot-label">Abschnitte mit den Pfeilen nach oben/unten verschieben.</p>
+<ul class="reorder-list" id="reorder-list"></ul>
+<div class="row-actions">
+<button class="btn secondary" id="settings-cancel">Abbrechen</button>
+<button class="btn" id="settings-save">Speichern</button>
+</div>
+</div>
+</div>
+
 <script>
 (function() {
   var spoolmanPort = window.__SPOOLMAN_PORT__ || '8091';
