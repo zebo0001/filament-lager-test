@@ -23,6 +23,7 @@ services:
   storage:
     build: ./storage
     restart: unless-stopped
+    shm_size: "512mb"  # Headless Chromium (Playwright) fuer Label-PNG/PDF-Export braucht mehr /dev/shm als der Docker-Default
     volumes:
       - storage_data:/data
     environment:

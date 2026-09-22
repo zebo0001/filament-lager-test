@@ -531,7 +531,7 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
 </main>
 
 <div class="links">
-  <a class="link-card spoolman" href="#" id="spoolman-link-bottom" target="_blank"><span class="dot"></span>Spoolman (vollständige Oberfläche)</a>
+  <a class="link-card spoolman" href="#" id="spoolman-full-link" target="_blank"><span class="dot"></span>Spoolman (vollständige Oberfläche)</a>
 </div>
 
 <footer>Filament-Lager &middot; Spoolman</footer>
@@ -799,6 +799,7 @@ function renderSpoolTable() {
     const found = findSlotForSpool(s.id);
     const locLabel = found ? unitSlotLabel(found.unit, found.slot) : null;
     return '<tr data-id="' + s.id + '">' +
+      '<td>#' + s.id + '</td>' +
       '<td>' + swatchSvg + '<span class="spool-name-link" data-id="' + s.id + '">' + name + '</span>' +
         (material ? ' <span class="material-badge">' + material + '</span>' : '') +
         (archived ? ' <span class="badge archived">archiviert</span>' : '') +
@@ -823,7 +824,7 @@ function renderSpoolTable() {
       '</tr>';
   }).join('');
 
-  el.innerHTML = '<table><thead><tr><th>Filament</th><th>Rest</th><th>Standort</th><th>Ein-/Auschecken</th><th>Verbrauch</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  el.innerHTML = '<table><thead><tr><th>ID</th><th>Filament</th><th>Rest</th><th>Standort</th><th>Ein-/Auschecken</th><th>Verbrauch</th></tr></thead><tbody>' + rows + '</tbody></table>';
 
   el.querySelectorAll('tbody tr').forEach(tr => {
     const id = parseInt(tr.dataset.id, 10);
@@ -1086,7 +1087,7 @@ function renderDeviceCard(unit) {
 
   return '<div class="device-card" data-unit-id="' + unit.id + '">' +
     '<div class="device-card-head">' +
-      '<div><div class="name">' + unit.name + '</div><div class="type">' + unit.type + ' &middot; ' + occupied + '/' + unit.slots.length + ' belegt' + rowsTag + aceTag + '</div></div>' +
+      '<div><div class="name">' + unit.name + ' <a class="unitLabelsPrintBtn" href="/api/storage/units/' + unit.id + '/labels-print" target="_blank" title="Slot-Labels drucken" style="font-size:12px;font-weight:normal;text-decoration:none;">\uD83D\uDDA8\uFE0F</a>' + '<\/div><div class="type">' + unit.type + ' &middot; ' + occupied + '/' + unit.slots.length + ' belegt' + rowsTag + aceTag + '</div></div>' +
       '<button class="btn secondary danger dev-delete" data-unit-id="' + unit.id + '" title="Gerät löschen">&times;</button>' +
     '</div>' +
     svg +
@@ -1372,7 +1373,7 @@ function onSpoolDragPointerDown(e) {
   let sourceEl = null;
 
   if (row) {
-    if (e.target.closest('button, input, .row-actions')) return;
+    if (e.target.closest('button, input, .row-actions, .spool-name-link')) return;
     spoolId = parseInt(row.dataset.id, 10);
     sourceEl = row;
   } else if (slotCircle) {
@@ -2066,7 +2067,24 @@ document.getElementById('ns-mode-toggle').addEventListener('click', () => {
   toggleEl.textContent = toNew ? 'Bestehenden Filament-Typ wählen' : 'Neuen Filament-Typ anlegen';
 });
 
-document.getElementById('ns-filament-search').addEventListener('input', e => renderFilamentSelect(e.target.value));
+document.getElementById('ns-filament-search').addEventListener('input', e => {
+  const raw = e.target.value;
+  const m = raw.match(/^WEB\+SPOOLMAN:F-(\d+)$/);
+  if (m) {
+    const filId = parseInt(m[1], 10);
+    e.target.value = '';
+    renderFilamentSelect('');
+    const filament = allFilaments.find(f => f.id === filId);
+    if (!filament) {
+      toast('Filament #' + filId + ' nicht gefunden', 'err');
+      return;
+    }
+    document.getElementById('ns-filament-select').value = String(filId);
+    toast('Filament erkannt: ' + filamentOptionLabel(filament), 'ok');
+    return;
+  }
+  renderFilamentSelect(raw);
+});
 
 document.getElementById('ns-db-search').addEventListener('input', e => {
   clearTimeout(dbSearchTimer);
@@ -2172,6 +2190,8 @@ async function init() {
 init();
 
 document.addEventListener('DOMContentLoaded', function() {
+  var spoolmanLink = document.getElementById('spoolman-full-link');
+  if (spoolmanLink) { spoolmanLink.href = window.location.protocol + '//' + window.location.hostname + ':8091'; }
 const PANEL_IDS = ["overview", "new-spool", "units", "spools", "shopping", "labels"];
 const PANEL_TITLES = { overview: "Gesamtübersicht", "new-spool": "Neue Spule", units: "Lagerplätze", spools: "Spulen", shopping: "Einkaufsliste", labels: "Label-Designer" };
 
@@ -2274,7 +2294,7 @@ document.getElementById("new-spool-panel").classList.toggle("collapsed");
 });
 
 document.getElementById("spoolman-open-btn").addEventListener("click", () => {
-window.open(location.protocol + '//' + location.hostname + ':' + (window.__SPOOLMAN_PORT__ || '8091'), "_blank");
+window.open(window.location.protocol + "//" + window.location.hostname + ":8091", "_blank");
 });
 
 // ---------- Label-Designer ----------
@@ -2552,6 +2572,12 @@ function ldResolveField(key, spool) {
   if (!key || key === "static") return "";
   const parts = key.split(".");
   let obj = spool;
+  if (parts[0] === "spool") {
+    parts.shift();
+  } else if (parts[0] === "vendor") {
+    parts.unshift("filament");
+  }
+  if (!parts.length) return "";
   for (let i = 0; i < parts.length; i++) {
     const p = parts[i];
     if (p === "extra" && obj) {
@@ -2740,7 +2766,7 @@ function ldRenderProps() {
     html += "<label>Textfarbe</label><input type=\"text\" id=\"ld-p-color\" value=\"" + ldEscapeHtml(el.color || "#111111") + "\">";
   } else if (el.type === "qr") {
     html += "<label>Inhalt des QR-Codes</label><select id=\"ld-p-field\">" + ldFieldOptions(el.field) + "</select>";
-    html += "<p class=\"labels-hint\">Das Spulen-Icon wird beim Export automatisch in der Filamentfarbe eingebettet.</p>";
+    html += "<p class=\"labels-hint\">Das App-Logo wird beim Export automatisch im Zentrum des QR-Codes eingebettet.</p>";
   } else if (el.type === "rect") {
     html += "<label>Fuellfarbe</label><input type=\"text\" id=\"ld-p-fill\" value=\"" + ldEscapeHtml(el.fill || "#38bdf8") + "\">";
     html += "<div class=\"prop-check\"><input type=\"checkbox\" id=\"ld-p-border\"" + (el.border ? " checked" : "") + "><label style=\"margin:0\">Rahmen</label></div>";
@@ -2815,15 +2841,175 @@ function ldWireProps(el) {
 </div>
 
 <script>
-(function() {
-  var spoolmanPort = window.__SPOOLMAN_PORT__ || '8091';
-  var url = location.protocol + '//' + location.hostname + ':' + spoolmanPort;
-  ['spoolman-link-top', 'spoolman-link-bottom'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.href = url;
-  });
+(function(){
+  let scanState = { spoolId: null, slotId: null, spoolLabel: '', slotLabel: '' };
+
+  function spoolDisplayName(s) {
+    const f = s.filament || {};
+    const vendor = f.vendor ? f.vendor.name : '';
+    return '#' + s.id + ' – ' + (vendor ? vendor + ' ' : '') + (f.name || ('Filament #' + f.id));
+  }
+
+  function setHint(text, kind) {
+    const hint = document.getElementById('scan-hint');
+    if (!hint) return;
+    hint.textContent = text || '';
+    hint.className = 'section-note' + (kind === 'err' ? ' warn' : '');
+  }
+
+  function updateScanDisplay() {
+    const spoolEl = document.getElementById('scan-spool-value');
+    const slotEl = document.getElementById('scan-slot-value');
+    const confirmBtn = document.getElementById('scan-confirm');
+    const resetBtn = document.getElementById('scan-reset');
+    if (scanState.spoolId) {
+      spoolEl.textContent = scanState.spoolLabel;
+      spoolEl.className = '';
+    } else {
+      spoolEl.textContent = '– noch nicht gescannt –';
+      spoolEl.className = 'muted';
+    }
+    if (scanState.slotId) {
+      slotEl.textContent = scanState.slotLabel;
+      slotEl.className = '';
+    } else {
+      slotEl.textContent = '– noch nicht gescannt –';
+      slotEl.className = 'muted';
+    }
+    const ready = scanState.spoolId && scanState.slotId;
+    confirmBtn.style.display = ready ? 'inline-block' : 'none';
+    resetBtn.style.display = (scanState.spoolId || scanState.slotId) ? 'inline-block' : 'none';
+  }
+
+  function resetScanState() {
+    scanState = { spoolId: null, slotId: null, spoolLabel: '', slotLabel: '' };
+    updateScanDisplay();
+    setHint('');
+  }
+
+  function handleScanCode(raw) {
+    const code = (raw || '').trim();
+    if (!code) return;
+    let m;
+    if ((m = code.match(/^WEB\+SPOOLMAN:S-(\d+)$/))) {
+      const spoolId = parseInt(m[1], 10);
+      const spool = allSpools.find(s => s.id === spoolId);
+      if (!spool) { setHint('Spule #' + spoolId + ' nicht gefunden.', 'err'); return; }
+      scanState.spoolId = spoolId;
+      scanState.spoolLabel = spoolDisplayName(spool);
+      setHint('Spule erkannt.');
+      updateScanDisplay();
+    } else if ((m = code.match(/^WEB\+SPOOLMAN:F-(\d+)$/))) {
+      setHint('Filament erkannt – für den Wareneingang bitte Stufe 3 abwarten.');
+    } else if ((m = code.match(/^WEB\+LAGER:SLOT-(\d+)$/))) {
+      const slotId = parseInt(m[1], 10);
+      const found = findUnitAndSlotBySlotId(slotId);
+      if (!found) { setHint('Platz #' + slotId + ' nicht gefunden.', 'err'); return; }
+      if (slotIsReserved(found.unit, found.slot)) { setHint('Dieser Platz ist für die ACE-Zuführung reserviert.', 'err'); return; }
+      scanState.slotId = slotId;
+      scanState.slotLabel = unitSlotLabel(found.unit, found.slot);
+      setHint('Platz erkannt.');
+      updateScanDisplay();
+    } else {
+      setHint('Unbekannter QR-Code: ' + code, 'err');
+    }
+  }
+
+  async function confirmScanAssignment() {
+    if (!scanState.spoolId || !scanState.slotId) return;
+    const found = findUnitAndSlotBySlotId(scanState.slotId);
+    if (!found) { setHint('Platz nicht mehr gefunden.', 'err'); return; }
+    if (found.slot.spool_id && found.slot.spool_id !== scanState.spoolId) {
+      setHint('Platz ist bereits belegt.', 'err');
+      return;
+    }
+    const sourceInfo = findSlotForSpool(scanState.spoolId);
+    if (sourceInfo && sourceInfo.slot.id === scanState.slotId) {
+      setHint('Spule liegt bereits auf diesem Platz.', 'err');
+      return;
+    }
+    await assignToSlot(scanState.spoolId, scanState.slotId, sourceInfo, found.unit.name || 'Gerät');
+    resetScanState();
+    closeScanOverlay();
+  }
+
+  function openScanOverlay() {
+    const overlay = document.getElementById('scan-overlay');
+    if (!overlay) return;
+    resetScanState();
+    overlay.classList.add('show');
+    setTimeout(() => { const inp = document.getElementById('scan-input'); if (inp) inp.focus(); }, 50);
+  }
+  function closeScanOverlay() {
+    const overlay = document.getElementById('scan-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('show');
+    resetScanState();
+  }
+
+  function initScanOverlay() {
+    const fab = document.getElementById('scan-fab');
+    const overlay = document.getElementById('scan-overlay');
+    const input = document.getElementById('scan-input');
+    const closeBtn = document.getElementById('scan-close');
+    const confirmBtn = document.getElementById('scan-confirm');
+    const resetBtn = document.getElementById('scan-reset');
+    if (!fab || !overlay || !input) return;
+
+    fab.addEventListener('click', openScanOverlay);
+    closeBtn.addEventListener('click', closeScanOverlay);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) { closeScanOverlay(); return; }
+      setTimeout(() => input.focus(), 10);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('show')) closeScanOverlay();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = input.value;
+        input.value = '';
+        handleScanCode(val);
+      }
+    });
+    confirmBtn.addEventListener('click', async () => {
+      confirmBtn.disabled = true;
+      try { await confirmScanAssignment(); } finally { confirmBtn.disabled = false; }
+    });
+    resetBtn.addEventListener('click', resetScanState);
+  }
+
+  document.addEventListener('DOMContentLoaded', initScanOverlay);
 })();
 </script>
+
+<button id="scan-fab" class="btn" title="Scan-Modus (Wareneingang)" style="position:fixed;right:1.25rem;bottom:1.25rem;width:3.4rem;height:3.4rem;border-radius:50%;font-size:1.4rem;padding:0;z-index:90;box-shadow:0 4px 14px rgba(0,0,0,.4);">📷</button>
+
+<div class="assign-overlay" id="scan-overlay">
+  <div class="assign-box">
+    <h3>Scan-Modus</h3>
+    <p class="slot-label">Spule und Lagerplatz in beliebiger Reihenfolge scannen.</p>
+    <input type="text" id="scan-input" autocomplete="off" style="width:100%;box-sizing:border-box;padding:.5rem .6rem;border-radius:8px;border:1px solid var(--border);background:#0b1220;color:var(--text);font-size:.85rem;margin-bottom:.75rem;">
+    <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem;">
+      <div style="display:flex;justify-content:space-between;gap:.5rem;">
+        <span class="muted">Spule:</span>
+        <span id="scan-spool-value" class="muted">– noch nicht gescannt –</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:.5rem;">
+        <span class="muted">Platz:</span>
+        <span id="scan-slot-value" class="muted">– noch nicht gescannt –</span>
+      </div>
+    </div>
+    <div id="scan-hint" class="section-note" style="min-height:1.1rem;"></div>
+    <div class="row-actions">
+      <button class="btn secondary" id="scan-close">Schließen</button>
+      <button class="btn secondary" id="scan-reset" style="display:none;">Zurücksetzen</button>
+      <button class="btn" id="scan-confirm" style="display:none;">Zuweisen bestätigen</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 
