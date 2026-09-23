@@ -70,6 +70,7 @@ def init_db():
                 color_name TEXT,
                 color_hex TEXT,
                 vendor TEXT,
+                article_number TEXT,
                 note TEXT,
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             )"""
@@ -88,7 +89,10 @@ def init_db():
             conn.execute("ALTER TABLE storage_units ADD COLUMN ace_feed_slot INTEGER")
         if "rows_per_level" not in cols:
             conn.execute("ALTER TABLE storage_units ADD COLUMN rows_per_level INTEGER NOT NULL DEFAULT 1")
-
+        shop_cols = [r["name"] for r in conn.execute("PRAGMA table_info(shopping_list)").fetchall()]
+        if "article_number" not in shop_cols:
+            conn.execute("ALTER TABLE shopping_list ADD COLUMN article_number TEXT")
+        
 
 init_db()
 
@@ -120,6 +124,7 @@ class ShoppingItemCreate(BaseModel):
     color_name: Optional[str] = None
     color_hex: Optional[str] = None
     vendor: Optional[str] = None
+    article_number: Optional[str] = None
     note: Optional[str] = None
 
 
@@ -313,8 +318,8 @@ def create_shopping_item(item: ShoppingItemCreate):
         raise HTTPException(400, "Bitte mindestens Material, Farbe oder Notiz angeben")
     with db() as conn:
         cur = conn.execute(
-            "INSERT INTO shopping_list (material, color_name, color_hex, vendor, note) VALUES (?,?,?,?,?)",
-            (item.material, item.color_name, item.color_hex, item.vendor, item.note),
+            "INSERT INTO shopping_list (material, color_name, color_hex, vendor, article_number, note) VALUES (?,?,?,?,?,?)",
+            (item.material, item.color_name, item.color_hex, item.vendor, item.article_number, item.note),
         )
         return {"id": cur.lastrowid}
 
@@ -373,6 +378,9 @@ with db() as conn:
             "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"
             ")"
     )
+    lt_cols = [r["name"] for r in conn.execute("PRAGMA table_info(label_templates)").fetchall()]
+    if "target_type" not in lt_cols:
+        conn.execute("ALTER TABLE label_templates ADD COLUMN target_type TEXT NOT NULL DEFAULT 'spool'")
 
 
 class LabelTemplateCreate(BaseModel):
@@ -381,6 +389,7 @@ class LabelTemplateCreate(BaseModel):
     width_mm: float = 85
     height_mm: float = 55
     elements: list = []
+    target_type: str = "spool"
 
 
 class LabelTemplateUpdate(BaseModel):
@@ -389,6 +398,7 @@ class LabelTemplateUpdate(BaseModel):
     width_mm: Optional[float] = None
     height_mm: Optional[float] = None
     elements: Optional[list] = None
+    target_type: Optional[str] = None
 
 
 def template_to_dict(row):
@@ -401,6 +411,7 @@ def template_to_dict(row):
             "elements": json.loads(row["elements"]) if row["elements"] else [],
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
+            "target_type": row["target_type"] if "target_type" in row.keys() else "spool",
     }
 
 
@@ -424,8 +435,8 @@ def get_label_template(template_id: int):
 def create_label_template(t: LabelTemplateCreate):
     with db() as conn:
         cur = conn.execute(
-                    "INSERT INTO label_templates (name, side, width_mm, height_mm, elements) VALUES (?, ?, ?, ?, ?)",
-                    (t.name, t.side, t.width_mm, t.height_mm, json.dumps(t.elements)),
+                    "INSERT INTO label_templates (name, side, width_mm, height_mm, elements, target_type) VALUES (?, ?, ?, ?, ?, ?)",
+                    (t.name, t.side, t.width_mm, t.height_mm, json.dumps(t.elements), t.target_type),
         )
         row = conn.execute("SELECT * FROM label_templates WHERE id=?", (cur.lastrowid,)).fetchone()
         return template_to_dict(row)
@@ -454,6 +465,9 @@ def update_label_template(template_id: int, t: LabelTemplateUpdate):
         if t.elements is not None:
             fields.append("elements=?")
             values.append(json.dumps(t.elements))
+        if t.target_type is not None:
+            fields.append("target_type=?")
+            values.append(t.target_type)
         if fields:
             sql = "UPDATE label_templates SET " + ", ".join(fields) + ", updated_at=CURRENT_TIMESTAMP WHERE id=?"
             values.append(template_id)
@@ -477,8 +491,8 @@ def duplicate_label_template(template_id: int):
             raise HTTPException(404, "Vorlage nicht gefunden")
         d = template_to_dict(row)
         cur = conn.execute(
-                    "INSERT INTO label_templates (name, side, width_mm, height_mm, elements) VALUES (?, ?, ?, ?, ?)",
-                    (d["name"] + " (Kopie)", d["side"], d["width_mm"], d["height_mm"], json.dumps(d["elements"])),
+                    "INSERT INTO label_templates (name, side, width_mm, height_mm, elements, target_type) VALUES (?, ?, ?, ?, ?, ?)",
+                    (d["name"] + " (Kopie)", d["side"], d["width_mm"], d["height_mm"], json.dumps(d["elements"]), d.get("target_type", "spool")),
         )
         newrow = conn.execute("SELECT * FROM label_templates WHERE id=?", (cur.lastrowid,)).fetchone()
         return template_to_dict(newrow)
@@ -488,6 +502,7 @@ DEFAULT_LABEL_FIELDS = [
     {"key": "spool.id", "label": "Spulen-ID", "entity": "spool"},
     {"key": "spool.remaining_weight", "label": "Restgewicht (g)", "entity": "spool"},
     {"key": "spool.location", "label": "Standort", "entity": "spool"},
+    {"key": "filament.id", "label": "Filament-ID", "entity": "filament"},
     {"key": "filament.name", "label": "Filament-Name", "entity": "filament"},
     {"key": "filament.material", "label": "Material", "entity": "filament"},
     {"key": "filament.color_hex", "label": "Farbe", "entity": "filament"},
@@ -778,6 +793,8 @@ def build_label_html(tpl, spool):
             v = ld_resolve_field(field, spool) if field else ""
             if field == "spool.id" and v not in ("", None):
                 data = "WEB+SPOOLMAN:S-" + js_str(v)
+            elif field == "filament.id" and v not in ("", None):
+                data = "WEB+SPOOLMAN:F-" + js_str(v)
             else:
                 data = js_str(v) if v != "" else ""
             qr_b64 = make_qr_png_b64(data, color, (ld_get_colors(spool) if len(ld_get_colors(spool)) > 1 else None), ((spool or {}).get("filament") or {}).get("multi_color_direction"))
@@ -805,13 +822,20 @@ def build_label_html(tpl, spool):
 
 
 class LabelExportRequest(BaseModel):
-    spool_ids: List[int]
+    spool_ids: List[int] = []
+    filament_ids: List[int] = []
     format: str = "png"
     dpi: int = 300
 
 
 async def fetch_spool(client, spool_id):
     resp = await client.get(SPOOLMAN_URL + "/spool/" + str(spool_id))
+    resp.raise_for_status()
+    return resp.json()
+
+
+async def fetch_filament(client, filament_id):
+    resp = await client.get(SPOOLMAN_URL + "/filament/" + str(filament_id))
     resp.raise_for_status()
     return resp.json()
 
@@ -834,6 +858,106 @@ async def render_label(browser, html, width_mm, height_mm, dpi, fmt):
         await page.close()
 
 
+class LabelSheetItem(BaseModel):
+    spool_id: Optional[int] = None
+    filament_id: Optional[int] = None
+    qty: int = 1
+
+
+class LabelSheetExportRequest(BaseModel):
+    items: List[LabelSheetItem] = []
+    page_format: str = "A4"
+    dpi: int = 300
+
+
+PAGE_FORMATS = {"A4": (210.0, 297.0), "Letter": (215.9, 279.4)}
+
+
+async def render_sheet(browser, html, page_w_mm, page_h_mm, dpi):
+    css_w = round(page_w_mm / 25.4 * 96)
+    css_h = round(page_h_mm / 25.4 * 96)
+    page = await browser.new_page(viewport={"width": css_w, "height": css_h}, device_scale_factor=dpi / 96)
+    try:
+        await page.set_content(html, wait_until="load")
+        return await page.pdf(
+            width=str(page_w_mm) + "mm",
+            height=str(page_h_mm) + "mm",
+            print_background=True,
+            margin={"top": "0mm", "bottom": "0mm", "left": "0mm", "right": "0mm"},
+        )
+    finally:
+        await page.close()
+
+
+@app.post("/label-templates/{template_id}/export-sheet")
+async def export_label_sheet(template_id: int, req: LabelSheetExportRequest):
+    with db() as conn:
+        row = conn.execute("SELECT * FROM label_templates WHERE id=?", (template_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Vorlage nicht gefunden")
+    tpl = template_to_dict(row)
+    if not req.items:
+        raise HTTPException(400, "Keine Druckliste angegeben")
+    page_w, page_h = PAGE_FORMATS.get(req.page_format, PAGE_FORMATS["A4"])
+    dpi = max(72, min(req.dpi or 300, 600))
+
+    flat = []
+    async with httpx.AsyncClient(timeout=15) as client:
+        for it in req.items:
+            qty = max(1, min(int(it.qty or 1), 200))
+            try:
+                if it.filament_id:
+                    fil = await fetch_filament(client, it.filament_id)
+                    spool = {"id": None, "filament": fil}
+                elif it.spool_id:
+                    spool = await fetch_spool(client, it.spool_id)
+                else:
+                    continue
+            except Exception:
+                raise HTTPException(400, "Element " + str(it.spool_id or it.filament_id) + " nicht gefunden")
+            for _ in range(qty):
+                flat.append(spool)
+
+    if not flat:
+        raise HTTPException(400, "Keine gueltigen Elemente in der Druckliste")
+    if len(flat) > 500:
+        raise HTTPException(400, "Zu viele Etiketten auf einmal (max 500)")
+
+    margin_mm = 5.0
+    gap_mm = 2.0
+    label_w = tpl["width_mm"]
+    label_h = tpl["height_mm"]
+    cols = max(1, int((page_w - 2 * margin_mm + gap_mm) // (label_w + gap_mm)))
+    rows = max(1, int((page_h - 2 * margin_mm + gap_mm) // (label_h + gap_mm)))
+    per_page = cols * rows
+
+    pages_html = []
+    for i in range(0, len(flat), per_page):
+        chunk = flat[i:i + per_page]
+        cells = "".join(
+            "<div style='width:" + str(label_w) + "mm;height:" + str(label_h) + "mm;overflow:hidden;'>" + build_label_html(tpl, sp) + "</div>"
+            for sp in chunk
+        )
+        pages_html.append(
+            "<div class='sheet-page' style='width:" + str(page_w) + "mm;height:" + str(page_h) + "mm;padding:" + str(margin_mm) + "mm;box-sizing:border-box;display:grid;"
+            + "grid-template-columns:repeat(" + str(cols) + "," + str(label_w) + "mm);grid-auto-rows:" + str(label_h) + "mm;gap:" + str(gap_mm) + "mm;'>" + cells + "</div>"
+        )
+    full_html = ("<html><head><meta charset='utf-8'><style>*{margin:0;padding:0;box-sizing:border-box;}"
+                 + "body{font-family:sans-serif;}.sheet-page{page-break-after:always;}.sheet-page:last-child{page-break-after:auto;}</style></head><body>"
+                 + "".join(pages_html) + "</body></html>")
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(args=["--no-sandbox"])
+        try:
+            data = await render_sheet(browser, full_html, page_w, page_h, dpi)
+        finally:
+            await browser.close()
+
+    return Response(content=data, media_type="application/pdf", headers={
+        "Content-Disposition": "attachment; filename=\"labels_sheet_" + str(template_id) + ".pdf\""
+    })
+
+
 @app.post("/label-templates/{template_id}/export")
 async def export_label_template(template_id: int, req: LabelExportRequest):
     with db() as conn:
@@ -841,19 +965,25 @@ async def export_label_template(template_id: int, req: LabelExportRequest):
     if not row:
         raise HTTPException(404, "Vorlage nicht gefunden")
     tpl = template_to_dict(row)
-    if not req.spool_ids:
-        raise HTTPException(400, "Keine Spulen ausgewaehlt")
+    is_filament = bool(req.filament_ids)
+    entity_ids = req.filament_ids if is_filament else req.spool_ids
+    if not entity_ids:
+        raise HTTPException(400, "Keine Spulen/Filamente ausgewaehlt")
     if req.format not in ("png", "pdf"):
         raise HTTPException(400, "Ungueltiges Format (png oder pdf)")
     dpi = max(72, min(req.dpi or 300, 600))
 
     spools = []
     async with httpx.AsyncClient(timeout=15) as client:
-        for sid in req.spool_ids:
+        for eid in entity_ids:
             try:
-                spools.append(await fetch_spool(client, sid))
+                if is_filament:
+                    fil = await fetch_filament(client, eid)
+                    spools.append({"id": None, "filament": fil})
+                else:
+                    spools.append(await fetch_spool(client, eid))
             except Exception:
-                raise HTTPException(400, "Spule " + str(sid) + " nicht gefunden")
+                raise HTTPException(400, ("Filament " if is_filament else "Spule ") + str(eid) + " nicht gefunden")
 
     outputs = []
     async with async_playwright() as p:
@@ -869,11 +999,11 @@ async def export_label_template(template_id: int, req: LabelExportRequest):
     if req.format == "png":
         if len(outputs) == 1:
             return Response(content=outputs[0], media_type="image/png", headers={
-                "Content-Disposition": "attachment; filename=\"label_" + str(template_id) + "_" + str(req.spool_ids[0]) + ".png\""
+                "Content-Disposition": "attachment; filename=\"label_" + str(template_id) + "_" + str(entity_ids[0]) + ".png\""
             })
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-            for sid, data in zip(req.spool_ids, outputs):
+            for sid, data in zip(entity_ids, outputs):
                 zf.writestr("label_" + str(sid) + ".png", data)
         return Response(content=buf.getvalue(), media_type="application/zip", headers={
             "Content-Disposition": "attachment; filename=\"labels_" + str(template_id) + ".zip\""

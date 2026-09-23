@@ -465,7 +465,7 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
       </div>
       <div>
         <label for="shop-vendor">Hersteller</label>
-        <input type="text" id="shop-vendor" placeholder="z.B. Prusament">
+        <input type="text" id="shop-vendor" placeholder="z.B. Prusament"></div><div><label for="shop-article">Artikelnr.</label><input type="text" id="shop-article" placeholder="optional">
       </div>
       <div style="flex:2 1 220px">
         <label for="shop-note">Notiz</label>
@@ -493,13 +493,22 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
           <button type="button" id="ld-side-front" class="active">Vorderseite</button>
           <button type="button" id="ld-side-back">Rueckseite</button>
         </div>
+        <div class="labels-side-toggle" id="ld-type-toggle">
+          <button type="button" id="ld-type-spool" class="active">Spule</button>
+          <button type="button" id="ld-type-filament">Filament</button>
+        </div>
         <div class="labels-size-fields">
           <span>B</span><input type="number" id="ld-width-input" value="85" step="0.5" min="10">
           <span>H</span><input type="number" id="ld-height-input" value="55" step="0.5" min="10">
           <span>mm</span>
         </div>
       </div>
-      <div class="labels-toolbar">
+      <div class="labels-side-toggle" id="ld-main-tab-toggle">
+        <button type="button" id="ld-tab-btn-design" class="active">Design</button>
+        <button type="button" id="ld-tab-btn-print">Druck</button>
+      </div>
+      <div id="ld-tab-design">
+<div class="labels-toolbar">
         <select id="ld-spool-picker" style="flex:1;min-width:10rem;padding:.4rem .6rem;border-radius:.35rem;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:inherit;">
           <option value="">Vorschau: Beispieldaten</option>
         </select>
@@ -524,6 +533,29 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
           <div class="label-props-empty">Element auswaehlen, um Eigenschaften zu bearbeiten.</div>
         </div>
       </div>
+      </div>
+      <div id="ld-tab-print" style="display:none;">
+        <div class="labels-toolbar">
+          <select id="ld-print-add-select" style="flex:1;min-width:14rem;">
+            <option value="">Spule/Filament zur Druckliste hinzufuegen...</option>
+          </select>
+          <button class="btn secondary" id="ld-print-add-btn" type="button">+ Hinzufuegen</button>
+          <select id="ld-print-format" style="min-width:8rem;">
+            <option value="A4" selected>A4</option>
+            <option value="Letter">Letter</option>
+          </select>
+          <button class="btn secondary danger" id="ld-print-clear-btn" type="button">Liste leeren</button>
+          <button class="btn" id="ld-print-export-btn" type="button">Bogen exportieren (PDF)</button>
+        </div>
+        <div class="labels-workspace">
+          <div style="flex:1;min-width:260px;">
+            <ul class="labels-template-list" id="ld-print-list" style="max-height:none;"></ul>
+          </div>
+          <div class="labels-canvas-wrap" id="ld-print-preview-wrap" style="flex:2;overflow:auto;align-items:flex-start;">
+            <div id="ld-print-preview"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -531,10 +563,11 @@ button.btn.icon-only { padding: .4rem .55rem; font-size: .95rem; line-height: 1;
 </main>
 
 <div class="links">
-  <a class="link-card spoolman" href="#" id="spoolman-full-link" target="_blank"><span class="dot"></span>Spoolman (vollständige Oberfläche)</a>
+  <a class="link-card spoolman" href="#" id="spoolman-link" target="_blank"><span class="dot"></span>Spoolman (vollständige Oberfläche)</a>
 </div>
 
-<footer>Filament-Lager &middot; Spoolman</footer>
+<footer>Spoolman</footer>
+<script>(function(){var l=document.getElementById("spoolman-link");if(l){l.href=window.location.protocol+"//"+window.location.hostname+":8091";}})();</script>
 
 <div class="toast" id="toast"></div>
 
@@ -586,7 +619,7 @@ Filament-Typ
 <div class="field-grid" id="sd-filament-fields">
 <div><label for="sd-fil-name">Name</label><input type="text" id="sd-fil-name" disabled></div>
 <div><label for="sd-fil-material">Material</label><input type="text" id="sd-fil-material" disabled></div>
-<div><label for="sd-fil-vendor">Hersteller</label><input type="text" id="sd-fil-vendor" disabled></div>
+<div><label for="sd-fil-vendor">Hersteller</label><input type="text" id="sd-fil-vendor" disabled></div><div><label for="sd-fil-article">Hersteller-Artikelnr.</label><input type="text" id="sd-fil-article" disabled></div>
 <div><label for="sd-fil-color">Farbe (Hex)</label><input type="text" id="sd-fil-color" disabled></div>
 <div class="full">
 <button type="button" class="new-spool-toggle" id="sd-color-mode-toggle" data-mode="single" disabled>Mehrfarbig?</button>
@@ -640,7 +673,7 @@ Filament-Typ
 <select id="ns-fil-vendor-select"></select>
 </div>
 <div id="ns-fil-vendor-new-wrap" style="display:none"><label for="ns-fil-vendor-new">Neuer Hersteller</label><input type="text" id="ns-fil-vendor-new" placeholder="Name"></div>
-<div><label for="ns-fil-color">Farbe (Hex, ohne #)</label><input type="text" id="ns-fil-color" placeholder="z.B. FF0000"></div>
+<div><label for="ns-fil-color">Farbe (Hex, ohne #)</label><input type="text" id="ns-fil-color" placeholder="z.B. FF0000"></div><div><label for="ns-fil-article">Hersteller-Artikelnr.</label><input type="text" id="ns-fil-article" placeholder="z.B. 03560422A"></div>
 <div class="full">
 <button type="button" class="new-spool-toggle" id="ns-color-mode-toggle" data-mode="single">Mehrfarbig?</button>
 <div id="ns-multicolor-block" style="display:none">
@@ -675,6 +708,8 @@ Filament-Typ
 </div>
 </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 const SP = '/api/spoolman';
 const ST = '/api/storage';
@@ -910,6 +945,7 @@ async function retireSpool(id) {
         color_name: f.name || null,
         color_hex: f.color_hex || null,
         vendor: vendor,
+        article_number: f.article_number || null,
         note: null
       })
     });
@@ -1285,16 +1321,15 @@ function openSpoolAssignDialog(spoolId, filterTypes) {
     sortedSlots.forEach(s => {
       const reserved = u.type === 'printer' && u.ace_feed_slot && (s.position + 1) === u.ace_feed_slot;
       if (reserved) return;
-      if (s.spool_id && s.spool_id !== spoolId) return;
-      options.push({ id: s.id, label: unitSlotLabel(u, s), current: s.spool_id === spoolId });
+      options.push({ id: s.id, label: unitSlotLabel(u, s), current: s.spool_id === spoolId, occupied: !!(s.spool_id && s.spool_id !== spoolId) });
     });
   });
 
   const select = document.getElementById('spool-assign-select');
   if (!options.length) {
-    select.innerHTML = '<option value="">Keine freien Plätze verfügbar</option>';
+    select.innerHTML = '<option value="">Keine Plätze verfügbar</option>';
   } else {
-    select.innerHTML = options.map(o => '<option value="' + o.id + '"' + (o.current ? ' selected' : '') + '>' + o.label + '</option>').join('');
+    select.innerHTML = options.map(o => '<option value="' + o.id + '"' + (o.current ? ' selected' : '') + (o.occupied ? ' disabled' : '') + ' style="color:' + (o.occupied ? '#f87171' : '#4ade80') + '">' + o.label + (o.occupied ? ' \u2014 belegt' : '') + '</option>').join('');
   }
   document.getElementById('spool-assign-overlay').classList.add('show');
 }
@@ -1607,11 +1642,12 @@ async function loadShoppingList() {
       return '<tr data-id="' + it.id + '">' +
         '<td>' + (color ? '<span class="swatch" style="background:' + color + '"></span>' : '') + title + '</td>' +
         '<td>' + (it.vendor || '<span class="muted">&ndash;</span>') + '</td>' +
+        '<td>' + (it.article_number || '<span class="muted">&ndash;</span>') + '</td>' +
         '<td>' + (it.note || '<span class="muted">&ndash;</span>') + '</td>' +
         '<td><button class="btn secondary danger shop-delete">Entfernen</button></td>' +
       '</tr>';
     }).join('');
-    el.innerHTML = '<table><thead><tr><th>Material/Farbe</th><th>Hersteller</th><th>Notiz</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    el.innerHTML = '<table><thead><tr><th>Material/Farbe</th><th>Hersteller</th><th>Artikelnr.</th><th>Notiz</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
     el.querySelectorAll('tbody tr').forEach(tr => {
       const id = tr.dataset.id;
       tr.querySelector('.shop-delete').addEventListener('click', async () => {
@@ -1634,16 +1670,18 @@ document.getElementById('shop-add-btn').addEventListener('click', async () => {
   const color_name = document.getElementById('shop-color').value.trim();
   const vendor = document.getElementById('shop-vendor').value.trim();
   const note = document.getElementById('shop-note').value.trim();
+  const articleNumber = document.getElementById('shop-article').value.trim();
   if (!material && !color_name && !note) { toast('Bitte mindestens Material, Farbe oder Notiz angeben', 'err'); return; }
   try {
     await api(ST + '/shopping-list', {
       method: 'POST',
-      body: JSON.stringify({ material: material || null, color_name: color_name || null, vendor: vendor || null, note: note || null })
+      body: JSON.stringify({ material: material || null, color_name: color_name || null, vendor: vendor || null, article_number: articleNumber || null, note: note || null })
     });
     document.getElementById('shop-material').value = '';
     document.getElementById('shop-color').value = '';
     document.getElementById('shop-vendor').value = '';
     document.getElementById('shop-note').value = '';
+    document.getElementById('shop-article').value = '';
     toast('Zur Einkaufsliste hinzugefüght', 'ok');
     loadShoppingList();
   } catch (e) {
@@ -1769,6 +1807,7 @@ async function openSpoolDetail(spoolId) {
   document.getElementById('sd-fil-name').value = f.name || '';
   document.getElementById('sd-fil-material').value = f.material || '';
   document.getElementById('sd-fil-vendor').value = f.vendor ? f.vendor.name : '';
+    document.getElementById('sd-fil-article').value = f.article_number || '';
   document.getElementById('sd-fil-color').value = f.color_hex || '';
   const sdMultiHexes = f.multi_color_hexes ? f.multi_color_hexes.split(',').map(x => x.trim()).filter(Boolean) : [];
   if (sdMultiHexes.length >= 2) {
@@ -1835,6 +1874,7 @@ document.getElementById('spool-detail-save').addEventListener('click', async () 
       const filBody = {
         name: document.getElementById('sd-fil-name').value || null,
         material: document.getElementById('sd-fil-material').value || null,
+        article_number: document.getElementById('sd-fil-article').value.trim() || null,
         color_hex: (sdColorMode === 'multi' && sdMcHexesOut.length >= 2) ? null : (document.getElementById('sd-fil-color').value || null),
         multi_color_hexes: (sdColorMode === 'multi' && sdMcHexesOut.length >= 2) ? sdMcHexesOut.join(',') : null,
         multi_color_direction: (sdColorMode === 'multi' && sdMcHexesOut.length >= 2) ? document.getElementById('sd-fil-multi-direction').value : null,
@@ -1910,6 +1950,7 @@ function applyExternalFilament(item) {
   document.getElementById('ns-fil-name').value = item.name || '';
   document.getElementById('ns-fil-material').value = item.material || '';
   document.getElementById('ns-fil-color').value = item.color_hex || '';
+  document.getElementById('ns-fil-article').value = item.article_number || '';
   document.getElementById('ns-fil-diameter').value = item.diameter != null ? item.diameter : '1.75';
   document.getElementById('ns-fil-density').value = item.density != null ? item.density : '';
   document.getElementById('ns-fil-extruder-temp').value = item.extruder_temp != null ? item.extruder_temp : '';
@@ -2034,7 +2075,7 @@ async function openNewSpoolDialog() {
   document.getElementById('ns-mode-toggle').dataset.mode = 'existing';
   document.getElementById('ns-fil-vendor-new-wrap').style.display = 'none';
 
-  ['ns-fil-name', 'ns-fil-material', 'ns-fil-color', 'ns-fil-density', 'ns-fil-extruder-temp', 'ns-fil-bed-temp', 'ns-fil-vendor-new'].forEach(id => {
+  ['ns-fil-name', 'ns-fil-material', 'ns-fil-color', 'ns-fil-article', 'ns-fil-density', 'ns-fil-extruder-temp', 'ns-fil-bed-temp', 'ns-fil-vendor-new'].forEach(id => {
     document.getElementById(id).value = '';
   });
   setColorMode('ns', 'single');
@@ -2069,7 +2110,7 @@ document.getElementById('ns-mode-toggle').addEventListener('click', () => {
 
 document.getElementById('ns-filament-search').addEventListener('input', e => {
   const raw = e.target.value;
-  const m = raw.match(/^WEB\+SPOOLMAN:F-(\d+)$/);
+  const m = raw.match(/^WEB\+SPOOLMAN:F-(\d+)$/i);
   if (m) {
     const filId = parseInt(m[1], 10);
     e.target.value = '';
@@ -2134,6 +2175,7 @@ document.getElementById('new-spool-save').addEventListener('click', async () => 
       const filBody = {
         name: name,
         material: material,
+        article_number: document.getElementById('ns-fil-article').value.trim() || null,
         diameter: diameter,
         density: density,
         vendor_id: vendorId || null,
@@ -2190,8 +2232,6 @@ async function init() {
 init();
 
 document.addEventListener('DOMContentLoaded', function() {
-  var spoolmanLink = document.getElementById('spoolman-full-link');
-  if (spoolmanLink) { spoolmanLink.href = window.location.protocol + '//' + window.location.hostname + ':8091'; }
 const PANEL_IDS = ["overview", "new-spool", "units", "spools", "shopping", "labels"];
 const PANEL_TITLES = { overview: "Gesamtübersicht", "new-spool": "Neue Spule", units: "Lagerplätze", spools: "Spulen", shopping: "Einkaufsliste", labels: "Label-Designer" };
 
@@ -2318,6 +2358,8 @@ async function ldInit() {
   document.getElementById("ld-save-btn").addEventListener("click", ldSaveTemplate);
   document.getElementById("ld-side-front").addEventListener("click", () => ldSetSide("front"));
   document.getElementById("ld-side-back").addEventListener("click", () => ldSetSide("back"));
+  document.getElementById("ld-type-spool").addEventListener("click", () => ldSetType("spool"));
+  document.getElementById("ld-type-filament").addEventListener("click", () => ldSetType("filament"));
   document.getElementById("ld-width-input").addEventListener("change", ldApplySize);
   document.getElementById("ld-height-input").addEventListener("change", ldApplySize);
   document.getElementById("ld-name-input").addEventListener("change", (e) => {
@@ -2334,20 +2376,225 @@ async function ldInit() {
   document.addEventListener("mousemove", ldOnDragMove);
   document.addEventListener("mouseup", ldOnDragEnd);
   await ldLoadFields();
-  ldFillSpoolPicker();
+  await ldFillSpoolPicker();
   await ldLoadTemplates();
   document.getElementById("ld-export-png-btn").addEventListener("click", () => ldExportLabel("png"));
   document.getElementById("ld-export-pdf-btn").addEventListener("click", () => ldExportLabel("pdf"));
+  document.getElementById("ld-tab-btn-design").addEventListener("click", () => ldSwitchTab("design"));
+  document.getElementById("ld-tab-btn-print").addEventListener("click", () => ldSwitchTab("print"));
+  document.getElementById("ld-print-add-btn").addEventListener("click", ldPrintAddItem);
+  document.getElementById("ld-print-clear-btn").addEventListener("click", () => {
+    ldPrintList = [];
+    ldRenderPrintList();
+    ldRenderPrintPreview();
+  });
+  document.getElementById("ld-print-export-btn").addEventListener("click", ldPrintExportSheet);
+  document.getElementById("ld-print-format").addEventListener("change", ldRenderPrintPreview);
+}
+
+let ldPrintList = [];
+
+function ldSwitchTab(tab) {
+  const design = document.getElementById("ld-tab-design");
+  const print = document.getElementById("ld-tab-print");
+  const btnD = document.getElementById("ld-tab-btn-design");
+  const btnP = document.getElementById("ld-tab-btn-print");
+  if (!design || !print) return;
+  if (tab === "print") {
+    design.style.display = "none";
+    print.style.display = "";
+    btnD.classList.remove("active");
+    btnP.classList.add("active");
+    ldFillPrintAddSelect();
+    ldRenderPrintList();
+    ldRenderPrintPreview();
+  } else {
+    print.style.display = "none";
+    design.style.display = "";
+    btnP.classList.remove("active");
+    btnD.classList.add("active");
+  }
+}
+
+async function ldFillPrintAddSelect() {
+  const sel = document.getElementById("ld-print-add-select");
+  if (!sel) return;
+  const isFilamentTpl = ldCurrentTemplate && ldCurrentTemplate.target_type === "filament";
+  const opts = ['<option value="">Spule/Filament zur Druckliste hinzufuegen...</option>'];
+  if (isFilamentTpl) {
+    await ensureFilamentAndVendorLists();
+    (allFilaments || []).forEach((f) => {
+      const label = "#" + f.id + " " + (f.name || (f.vendor && f.vendor.name ? f.vendor.name : "Filament"));
+      opts.push('<option value="filament:' + f.id + '">' + ldEscapeHtml(label) + "</option>");
+    });
+  } else {
+    (allSpools || []).forEach((s) => {
+      const label = "#" + s.id + " " + (s.filament && s.filament.name ? s.filament.name : "Spule");
+      opts.push('<option value="spool:' + s.id + '">' + ldEscapeHtml(label) + "</option>");
+    });
+  }
+  sel.innerHTML = opts.join("");
+}
+
+function ldPrintAddItem() {
+  const sel = document.getElementById("ld-print-add-select");
+  if (!sel || !sel.value) { toast("Bitte Spule/Filament waehlen", "error"); return; }
+  const [kind, idStr] = sel.value.split(":");
+  const id = parseInt(idStr, 10);
+  const existing = ldPrintList.find((it) => it.kind === kind && it.id === id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    ldPrintList.push({ kind, id, label: sel.options[sel.selectedIndex].textContent, qty: 1 });
+  }
+  ldRenderPrintList();
+  ldRenderPrintPreview();
+}
+
+function ldRenderPrintList() {
+  const ul = document.getElementById("ld-print-list");
+  if (!ul) return;
+  if (!ldPrintList.length) {
+    ul.innerHTML = '<li style="opacity:.6;padding:.5rem;">Druckliste ist leer.</li>';
+    return;
+  }
+  ul.innerHTML = "";
+  ldPrintList.forEach((it, idx) => {
+    const li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.alignItems = "center";
+    li.style.gap = ".5rem";
+    li.style.padding = ".3rem .2rem";
+    const nameSpan = document.createElement("span");
+    nameSpan.style.flex = "1";
+    nameSpan.textContent = it.label;
+    const qtyInput = document.createElement("input");
+    qtyInput.type = "number";
+    qtyInput.min = "1";
+    qtyInput.step = "1";
+    qtyInput.value = it.qty;
+    qtyInput.style.width = "4rem";
+    qtyInput.addEventListener("change", (e) => {
+      it.qty = Math.max(1, parseInt(e.target.value, 10) || 1);
+      ldRenderPrintPreview();
+    });
+    const rmBtn = document.createElement("button");
+    rmBtn.className = "btn secondary danger";
+    rmBtn.type = "button";
+    rmBtn.textContent = "x";
+    rmBtn.addEventListener("click", () => {
+      ldPrintList.splice(idx, 1);
+      ldRenderPrintList();
+      ldRenderPrintPreview();
+    });
+    li.appendChild(nameSpan);
+    li.appendChild(qtyInput);
+    li.appendChild(rmBtn);
+    ul.appendChild(li);
+  });
+}
+
+function ldPrintPageFormatMm() {
+  const sel = document.getElementById("ld-print-format");
+  const val = sel ? sel.value : "A4";
+  return val === "Letter" ? [215.9, 279.4] : [210.0, 297.0];
+}
+
+function ldRenderPrintPreview() {
+  const wrap = document.getElementById("ld-print-preview");
+  if (!wrap || !ldCurrentTemplate) return;
+  wrap.innerHTML = "";
+  const totalQty = ldPrintList.reduce((s, it) => s + it.qty, 0);
+  if (!totalQty) {
+    wrap.innerHTML = '<div style="opacity:.6;padding:1rem;">Keine Etiketten in der Druckliste.</div>';
+    return;
+  }
+  const [pageWmm, pageHmm] = ldPrintPageFormatMm();
+  const marginMm = 5, gapMm = 2;
+  const labelW = ldCurrentTemplate.width_mm, labelH = ldCurrentTemplate.height_mm;
+  const cols = Math.max(1, Math.floor((pageWmm - 2 * marginMm + gapMm) / (labelW + gapMm)));
+  const rows = Math.max(1, Math.floor((pageHmm - 2 * marginMm + gapMm) / (labelH + gapMm)));
+  const perPage = cols * rows;
+  const pages = Math.ceil(totalQty / perPage);
+  const scale = 1.8;
+  const info = document.createElement("div");
+  info.style.marginBottom = ".5rem";
+  info.style.fontSize = ".85rem";
+  info.style.opacity = ".8";
+  info.textContent = totalQty + " Etikett(en), " + perPage + " pro Seite, " + pages + " Seite(n) (" + cols + "x" + rows + ")";
+  wrap.appendChild(info);
+  let remaining = totalQty;
+  for (let p = 0; p < pages; p++) {
+    const pageDiv = document.createElement("div");
+    pageDiv.style.width = (pageWmm * scale) + "px";
+    pageDiv.style.height = (pageHmm * scale) + "px";
+    pageDiv.style.background = "#ffffff";
+    pageDiv.style.margin = "0 0 1rem 0";
+    pageDiv.style.padding = (marginMm * scale) + "px";
+    pageDiv.style.boxSizing = "border-box";
+    pageDiv.style.display = "grid";
+    pageDiv.style.gridTemplateColumns = "repeat(" + cols + "," + (labelW * scale) + "px)";
+    pageDiv.style.gridAutoRows = (labelH * scale) + "px";
+    pageDiv.style.gap = (gapMm * scale) + "px";
+    pageDiv.style.boxShadow = "0 0 6px rgba(0,0,0,.4)";
+    const onPage = Math.min(perPage, remaining);
+    for (let c = 0; c < onPage; c++) {
+      const cell = document.createElement("div");
+      cell.style.width = (labelW * scale) + "px";
+      cell.style.height = (labelH * scale) + "px";
+      cell.style.border = "1px dashed rgba(0,0,0,.3)";
+      cell.style.background = "#f4f4f4";
+      pageDiv.appendChild(cell);
+    }
+    remaining -= onPage;
+    wrap.appendChild(pageDiv);
+  }
+}
+
+async function ldPrintExportSheet() {
+  if (!ldCurrentTemplate || !ldCurrentTemplate.id) { toast("Vorlage zuerst speichern", "error"); return; }
+  if (!ldPrintList.length) { toast("Druckliste ist leer", "error"); return; }
+  const items = ldPrintList.map((it) => {
+    const obj = { qty: it.qty };
+    if (it.kind === "filament") obj.filament_id = it.id; else obj.spool_id = it.id;
+    return obj;
+  });
+  const body = { items, page_format: document.getElementById("ld-print-format").value, dpi: 300 };
+  try {
+    const res = await fetch(ST + "/label-templates/" + ldCurrentTemplate.id + "/export-sheet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      let d = "";
+      try { d = await res.text(); } catch (e) {}
+      throw new Error("HTTP " + res.status + (d ? ": " + d.slice(0, 200) : ""));
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "labels_sheet_" + ldCurrentTemplate.id + ".pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) {
+    toast("Bogen-Export fehlgeschlagen: " + e.message, "error");
+  }
 }
 
 async function ldExportLabel(fmt) {
   if (!ldCurrentTemplate || !ldCurrentTemplate.id) { toast("Vorlage zuerst speichern", "error"); return; }
-  if (!ldSelectedSpoolId) { toast("Bitte zuerst eine Spule waehlen", "error"); return; }
+  if (!ldSelectedSpoolId) { toast("Bitte zuerst Spule/Filament waehlen", "error"); return; }
   try {
+    const ldIsFilamentExp = ldCurrentTemplate.target_type === "filament";
+    const ldExpBody = ldIsFilamentExp ? { filament_ids: [ldSelectedSpoolId], format: fmt, dpi: 300 } : { spool_ids: [ldSelectedSpoolId], format: fmt, dpi: 300 };
     const res = await fetch(ST + "/label-templates/" + ldCurrentTemplate.id + "/export", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({spool_ids: [ldSelectedSpoolId], format: fmt, dpi: 300})
+      body: JSON.stringify(ldExpBody)
     });
     if (!res.ok) {
       let d = "";
@@ -2374,14 +2621,23 @@ async function ldExportLabel(fmt) {
   }
 }
 
-function ldFillSpoolPicker() {
+async function ldFillSpoolPicker() {
   const sel = document.getElementById("ld-spool-picker");
   if (!sel) return;
+  const ldIsFilamentTpl = ldCurrentTemplate && ldCurrentTemplate.target_type === "filament";
   const opts = [ "<option value=\"\">Vorschau: Beispieldaten</option>" ];
-  allSpools.forEach((s) => {
-    const label = "#" + s.id + " " + (s.filament && s.filament.name ? s.filament.name : "Spule");
-    opts.push("<option value=\"" + s.id + "\">" + ldEscapeHtml(label) + "</option>");
-  });
+  if (ldIsFilamentTpl) {
+    await ensureFilamentAndVendorLists();
+    (allFilaments || []).forEach((f) => {
+      const label = "#" + f.id + " " + (f.name || (f.vendor && f.vendor.name ? f.vendor.name : "Filament"));
+      opts.push("<option value=\"" + f.id + "\">" + ldEscapeHtml(label) + "</option>");
+    });
+  } else {
+    allSpools.forEach((s) => {
+      const label = "#" + s.id + " " + (s.filament && s.filament.name ? s.filament.name : "Spule");
+      opts.push("<option value=\"" + s.id + "\">" + ldEscapeHtml(label) + "</option>");
+    });
+  }
   sel.innerHTML = opts.join("");
 }
 async function ldLoadFields() {
@@ -2423,17 +2679,27 @@ function ldRenderTemplateList() {
   });
 }
 
-function ldSelectTemplate(id) {
+async function ldSelectTemplate(id) {
   const t = ldTemplates.find((x) => x.id === id);
   if (!t) return;
   ldCurrentTemplate = JSON.parse(JSON.stringify(t));
   ldSelectedElId = null;
+  ldSelectedSpoolId = "";
+  await ldFillSpoolPicker();
+  ldPrintList = [];
+  await ldFillPrintAddSelect();
+  ldRenderPrintList();
+  ldRenderPrintPreview();
   ldRenderAll();
 }
 
 function ldNewTemplate() {
-  ldCurrentTemplate = { id: null, name: "Neue Vorlage", side: "front", width_mm: 85, height_mm: 55, elements: [] };
+  ldCurrentTemplate = { id: null, name: "Neue Vorlage", side: "front", width_mm: 85, height_mm: 55, elements: [], target_type: "spool" };
   ldSelectedElId = null;
+  ldPrintList = [];
+  ldFillPrintAddSelect();
+  ldRenderPrintList();
+  ldRenderPrintPreview();
   ldRenderAll();
 }
 async function ldSaveTemplate() {
@@ -2443,7 +2709,8 @@ async function ldSaveTemplate() {
     side: ldCurrentTemplate.side,
     width_mm: ldCurrentTemplate.width_mm,
     height_mm: ldCurrentTemplate.height_mm,
-    elements: ldCurrentTemplate.elements
+    elements: ldCurrentTemplate.elements,
+    target_type: ldCurrentTemplate.target_type || "spool"
   };
   try {
     let saved;
@@ -2494,6 +2761,20 @@ function ldSetSide(side) {
   ldRenderAll();
 }
 
+async function ldSetType(type) {
+  if (!ldCurrentTemplate) return;
+  ldCurrentTemplate.target_type = type;
+  (ldCurrentTemplate.elements || []).forEach(function(el) {
+    if (el.type === "qr") {
+      if (type === "filament" && el.field === "spool.id") el.field = "filament.id";
+      else if (type === "spool" && el.field === "filament.id") el.field = "spool.id";
+    }
+  });
+  ldSelectedSpoolId = "";
+  await ldFillSpoolPicker();
+  ldRenderAll();
+}
+
 function ldApplySize() {
   if (!ldCurrentTemplate) return;
   const w = parseFloat(document.getElementById("ld-width-input").value) || 85;
@@ -2517,7 +2798,7 @@ function ldAddElement(type) {
     base.color = "#111111";
   } else if (type === "qr") {
     base.w = 20; base.h = 20;
-    base.field = "spool.id";
+    base.field = (ldCurrentTemplate.target_type === "filament") ? "filament.id" : "spool.id";
   } else if (type === "color") {
     base.w = 12; base.h = 12;
   } else if (type === "rect") {
@@ -2544,9 +2825,15 @@ function ldSelectElement(id) {
 }
 
 function ldGetPreviewSpool() {
+  const ldIsFilamentTpl = ldCurrentTemplate && ldCurrentTemplate.target_type === "filament";
   if (ldSelectedSpoolId) {
-    const s = allSpools.find((x) => String(x.id) === String(ldSelectedSpoolId));
-    if (s) return s;
+    if (ldIsFilamentTpl) {
+      const f = (allFilaments || []).find((x) => String(x.id) === String(ldSelectedSpoolId));
+      if (f) return { id: null, filament: f };
+    } else {
+      const s = allSpools.find((x) => String(x.id) === String(ldSelectedSpoolId));
+      if (s) return s;
+    }
   }
   return {
     id: 123,
@@ -2618,6 +2905,8 @@ function ldRenderToolbar() {
   document.getElementById("ld-height-input").value = ldCurrentTemplate.height_mm;
   document.getElementById("ld-side-front").classList.toggle("active", ldCurrentTemplate.side !== "back");
   document.getElementById("ld-side-back").classList.toggle("active", ldCurrentTemplate.side === "back");
+  document.getElementById("ld-type-spool").classList.toggle("active", (ldCurrentTemplate.target_type || "spool") !== "filament");
+  document.getElementById("ld-type-filament").classList.toggle("active", ldCurrentTemplate.target_type === "filament");
   document.getElementById("ld-delete-btn").style.display = ldCurrentTemplate.id ? "" : "none";
   document.getElementById("ld-duplicate-btn").style.display = ldCurrentTemplate.id ? "" : "none";
 }
@@ -2678,24 +2967,63 @@ function ldBuildElementContent(el, spool) {
     wrap.style.width = "100%";
     wrap.style.height = "100%";
     const ph = document.createElement("div");
-    ph.className = "label-el-qr-placeholder";
     ph.style.position = "relative";
     ph.style.width = "100%";
     ph.style.height = "100%";
-    const iconWrap = document.createElement("div");
-    iconWrap.style.position = "absolute";
-    iconWrap.style.left = "50%";
-    iconWrap.style.top = "50%";
-    iconWrap.style.transform = "translate(-50%, -50%)";
-    iconWrap.style.width = "38%";
-    iconWrap.style.height = "38%";
-    iconWrap.style.background = "#ffffff";
-    iconWrap.style.borderRadius = "20%";
-    iconWrap.style.display = "flex";
-    iconWrap.style.alignItems = "center";
-    iconWrap.style.justifyContent = "center";
-    iconWrap.innerHTML = ldSpoolIconSvg(ldGetColor(spool));
-    ph.appendChild(iconWrap);
+    const qrData = ldQrData(el, spool);
+    if (qrData && window.QRCode) {
+      ph.style.background = "#ffffff";
+      ph.style.display = "flex";
+      ph.style.alignItems = "center";
+      ph.style.justifyContent = "center";
+      const qrBox = document.createElement("div");
+      qrBox.style.width = "92%";
+      qrBox.style.height = "92%";
+      ph.appendChild(qrBox);
+      ph.style.overflow = "hidden";
+      new QRCode(qrBox, { text: qrData, width: 256, height: 256, correctLevel: QRCode.CorrectLevel.H, colorDark: "#000000", colorLight: "#ffffff" });
+      Array.from(qrBox.children).forEach((child) => {
+        child.style.width = "100%";
+        child.style.height = "100%";
+        child.style.display = "block";
+      });
+      setTimeout(() => {
+        Array.from(qrBox.children).forEach((child) => {
+          child.style.width = "100%";
+          child.style.height = "100%";
+        });
+      }, 0);
+      const iconWrap = document.createElement("div");
+      iconWrap.style.position = "absolute";
+      iconWrap.style.left = "50%";
+      iconWrap.style.top = "50%";
+      iconWrap.style.transform = "translate(-50%, -50%)";
+      iconWrap.style.width = "26%";
+      iconWrap.style.height = "26%";
+      iconWrap.style.background = "#ffffff";
+      iconWrap.style.borderRadius = "20%";
+      iconWrap.style.display = "flex";
+      iconWrap.style.alignItems = "center";
+      iconWrap.style.justifyContent = "center";
+      iconWrap.innerHTML = ldSpoolIconSvg(ldGetColor(spool));
+      ph.appendChild(iconWrap);
+    } else {
+      ph.className = "label-el-qr-placeholder";
+      const iconWrap = document.createElement("div");
+      iconWrap.style.position = "absolute";
+      iconWrap.style.left = "50%";
+      iconWrap.style.top = "50%";
+      iconWrap.style.transform = "translate(-50%, -50%)";
+      iconWrap.style.width = "38%";
+      iconWrap.style.height = "38%";
+      iconWrap.style.background = "#ffffff";
+      iconWrap.style.borderRadius = "20%";
+      iconWrap.style.display = "flex";
+      iconWrap.style.alignItems = "center";
+      iconWrap.style.justifyContent = "center";
+      iconWrap.innerHTML = ldSpoolIconSvg(ldGetColor(spool));
+      ph.appendChild(iconWrap);
+    }
     wrap.appendChild(ph);
   } else if (el.type === "color") {
     wrap.className = "label-el-color";
@@ -2715,6 +3043,19 @@ function ldBuildElementContent(el, spool) {
     wrap.innerHTML = ldSpoolIconSvg(ldGetColor(spool));
   }
   return wrap;
+}
+function ldQrData(el, spool) {
+  const field = el.field;
+  if (field === "spool.id") {
+    const v = spool && spool.id;
+    return (v || v === 0) ? ("WEB+SPOOLMAN:S-" + v) : null;
+  }
+  if (field === "filament.id") {
+    const f = (spool && spool.filament) || {};
+    const v = f.id;
+    return (v || v === 0) ? ("WEB+SPOOLMAN:F-" + v) : null;
+  }
+  return null;
 }
 function ldSpoolIconSvg(color) {
   return "<svg viewBox=\"0 0 100 100\" style=\"width:100%;height:100%\"><circle cx=\"50\" cy=\"50\" r=\"46\" fill=\"" + color + "\" stroke=\"#00000022\" stroke-width=\"2\"></circle><circle cx=\"50\" cy=\"50\" r=\"16\" fill=\"#ffffff\"></circle><circle cx=\"50\" cy=\"50\" r=\"16\" fill=\"none\" stroke=\"#00000022\" stroke-width=\"2\"></circle></svg>";
@@ -2792,7 +3133,9 @@ function ldTypeLabel(type) {
 
 function ldFieldOptions(current) {
   let opts = "<option value=\"static\"" + (!current || current === "static" ? " selected" : "") + ">-- Freitext --</option>";
-  ldFields.forEach((f) => {
+  const ldIsFilamentTpl2 = ldCurrentTemplate && ldCurrentTemplate.target_type === "filament";
+  const ldFieldList = ldIsFilamentTpl2 ? ldFields.filter((f) => f.entity !== "spool") : ldFields;
+  ldFieldList.forEach((f) => {
     opts += "<option value=\"" + f.key + "\"" + (current === f.key ? " selected" : "") + ">" + ldEscapeHtml(f.label) + "</option>";
   });
   return opts;
@@ -2842,7 +3185,7 @@ function ldWireProps(el) {
 
 <script>
 (function(){
-  let scanState = { spoolId: null, slotId: null, spoolLabel: '', slotLabel: '' };
+  let scanState = { spoolId: null, slotId: null, spoolLabel: '', slotLabel: '', autoAssign: false, lastCode: null };
 
   function spoolDisplayName(s) {
     const f = s.filament || {};
@@ -2882,7 +3225,7 @@ function ldWireProps(el) {
   }
 
   function resetScanState() {
-    scanState = { spoolId: null, slotId: null, spoolLabel: '', slotLabel: '' };
+    scanState = { spoolId: null, slotId: null, spoolLabel: '', slotLabel: '', autoAssign: false, lastCode: null };
     updateScanDisplay();
     setHint('');
   }
@@ -2890,29 +3233,93 @@ function ldWireProps(el) {
   function handleScanCode(raw) {
     const code = (raw || '').trim();
     if (!code) return;
+    if (code === scanState.lastCode) return;
+    scanState.lastCode = code;
     let m;
-    if ((m = code.match(/^WEB\+SPOOLMAN:S-(\d+)$/))) {
+    if ((m = code.match(/^WEB\+SPOOLMAN:S-(\d+)$/i))) {
       const spoolId = parseInt(m[1], 10);
       const spool = allSpools.find(s => s.id === spoolId);
-      if (!spool) { setHint('Spule #' + spoolId + ' nicht gefunden.', 'err'); return; }
+      if (!spool) { setHint('Spule #' + spoolId + ' nicht gefunden.', 'err'); toast('Spule #' + spoolId + ' nicht gefunden.', 'err'); return; }
       scanState.spoolId = spoolId;
       scanState.spoolLabel = spoolDisplayName(spool);
+      scanState.autoAssign = false;
       setHint('Spule erkannt.');
+      toast('Spule erkannt: ' + scanState.spoolLabel, 'ok');
       updateScanDisplay();
-    } else if ((m = code.match(/^WEB\+SPOOLMAN:F-(\d+)$/))) {
-      setHint('Filament erkannt – für den Wareneingang bitte Stufe 3 abwarten.');
-    } else if ((m = code.match(/^WEB\+LAGER:SLOT-(\d+)$/))) {
+      tryAutoAssign();
+    } else if ((m = code.match(/^WEB\+SPOOLMAN:F-(\d+)$/i))) {
+      handleFilamentScan(parseInt(m[1], 10));
+    } else if ((m = code.match(/^WEB\+LAGER:SLOT-(\d+)$/i))) {
       const slotId = parseInt(m[1], 10);
       const found = findUnitAndSlotBySlotId(slotId);
-      if (!found) { setHint('Platz #' + slotId + ' nicht gefunden.', 'err'); return; }
-      if (slotIsReserved(found.unit, found.slot)) { setHint('Dieser Platz ist für die ACE-Zuführung reserviert.', 'err'); return; }
+      if (!found) { setHint('Platz #' + slotId + ' nicht gefunden.', 'err'); toast('Platz #' + slotId + ' nicht gefunden.', 'err'); return; }
+      if (slotIsReserved(found.unit, found.slot)) { setHint('Dieser Platz ist fuer die ACE-Zufuehrung reserviert.', 'err'); toast('Platz ist fuer die ACE-Zufuehrung reserviert.', 'err'); return; }
       scanState.slotId = slotId;
       scanState.slotLabel = unitSlotLabel(found.unit, found.slot);
       setHint('Platz erkannt.');
+      toast('Platz erkannt: ' + scanState.slotLabel, 'ok');
       updateScanDisplay();
+      tryAutoAssign();
     } else {
       setHint('Unbekannter QR-Code: ' + code, 'err');
+      toast('Unbekannter QR-Code.', 'err');
     }
+  }
+
+  async function handleFilamentScan(filId) {
+    if (scanState.spoolId) {
+      setHint('Bereits eine Spule vorbereitet - zuerst Platz scannen oder zuruecksetzen.', 'err');
+      toast('Bereits eine Spule vorbereitet - zuerst Platz scannen oder zuruecksetzen.', 'err');
+      return;
+    }
+    let fil;
+    try {
+      fil = await api(SP + '/filament/' + filId);
+    } catch (e) {
+      setHint('Filament #' + filId + ' nicht gefunden.', 'err');
+      toast('Filament #' + filId + ' nicht gefunden.', 'err');
+      return;
+    }
+    setHint('Filament erkannt - lege Spule an ...');
+    try {
+      const spoolBody = {
+        filament_id: filId,
+        price: null,
+        initial_weight: fil.weight != null ? fil.weight : 1000,
+        spool_weight: null,
+        lot_nr: null,
+      };
+      const newSpool = await api(SP + '/spool', { method: 'POST', body: JSON.stringify(spoolBody) });
+      allSpools.push(newSpool);
+      scanState.spoolId = newSpool.id;
+      scanState.spoolLabel = spoolDisplayName(newSpool);
+      scanState.autoAssign = true;
+      setHint('Spule angelegt: ' + scanState.spoolLabel);
+      toast('Spule angelegt: ' + scanState.spoolLabel, 'ok');
+      updateScanDisplay();
+      await tryAutoAssign();
+    } catch (e) {
+      setHint('Fehler beim Anlegen der Spule: ' + e.message, 'err');
+      toast('Fehler beim Anlegen der Spule: ' + e.message, 'err');
+    }
+  }
+
+  async function tryAutoAssign() {
+    if (!scanState.autoAssign) return;
+    if (!scanState.spoolId || !scanState.slotId) return;
+    const found = findUnitAndSlotBySlotId(scanState.slotId);
+    if (!found) { setHint('Platz nicht mehr gefunden.', 'err'); toast('Platz nicht mehr gefunden.', 'err'); return; }
+    if (found.slot.spool_id && found.slot.spool_id !== scanState.spoolId) {
+      setHint('Platz ist bereits belegt.', 'err');
+      toast('Platz ist bereits belegt - bitte anderen Platz scannen.', 'err');
+      return;
+    }
+    const spoolLabel = scanState.spoolLabel;
+    const slotLabel = scanState.slotLabel;
+    const sourceInfo = findSlotForSpool(scanState.spoolId);
+    await assignToSlot(scanState.spoolId, scanState.slotId, sourceInfo, found.unit.name || 'Geraet');
+    toast('Zugewiesen: ' + spoolLabel + ' -> ' + slotLabel, 'ok');
+    resetScanState();
   }
 
   async function confirmScanAssignment() {
@@ -2933,10 +3340,84 @@ function ldWireProps(el) {
     closeScanOverlay();
   }
 
+  const CAMERA_PREF_KEY = 'lagersystem_camera_scan_enabled';
+  let html5QrCodeInstance = null;
+  let cameraLastCode = null;
+  let cameraLastTime = 0;
+
+  function isSecureCtx() {
+    return window.isSecureContext === true;
+  }
+
+  async function startCameraScan() {
+    const readerBox = document.getElementById('scan-camera-reader');
+    const btn = document.getElementById('scan-camera-btn');
+    if (!readerBox || !window.Html5Qrcode) { setHint('Kamera-Bibliothek nicht verfuegbar.', 'err'); return; }
+    if (html5QrCodeInstance) return;
+    readerBox.style.display = 'block';
+    readerBox.innerHTML = '';
+    if (btn) btn.textContent = 'Kamera stoppen';
+    try {
+      html5QrCodeInstance = new Html5Qrcode('scan-camera-reader');
+      await html5QrCodeInstance.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: 220 },
+        (decodedText) => {
+          const now = Date.now();
+          if (decodedText === cameraLastCode && (now - cameraLastTime) < 2500) return;
+          cameraLastCode = decodedText;
+          cameraLastTime = now;
+          handleScanCode(decodedText);
+        },
+        () => {}
+      );
+    } catch (err) {
+      setHint('Kamera konnte nicht gestartet werden: ' + (err && err.message ? err.message : err), 'err');
+      await stopCameraScan();
+    }
+  }
+
+  async function stopCameraScan() {
+    const readerBox = document.getElementById('scan-camera-reader');
+    const btn = document.getElementById('scan-camera-btn');
+    if (html5QrCodeInstance) {
+      try { await html5QrCodeInstance.stop(); } catch (e) {}
+      try { html5QrCodeInstance.clear(); } catch (e) {}
+      html5QrCodeInstance = null;
+    }
+    if (readerBox) { readerBox.style.display = 'none'; readerBox.innerHTML = ''; }
+    if (btn) btn.textContent = 'Kamera scannen';
+    cameraLastCode = null;
+  }
+
+  function applyCameraToggleState() {
+    const toggle = document.getElementById('scan-camera-toggle');
+    const hint = document.getElementById('scan-camera-hint');
+    const btn = document.getElementById('scan-camera-btn');
+    if (!toggle || !hint || !btn) return;
+    const secure = isSecureCtx();
+    if (!secure) {
+      toggle.checked = false;
+      toggle.disabled = true;
+      hint.textContent = 'Kamera-Scan benoetigt eine HTTPS-Verbindung und ist auf dieser Seite nicht verfuegbar.';
+      hint.className = 'section-note warn';
+      btn.style.display = 'none';
+      stopCameraScan();
+      return;
+    }
+    toggle.disabled = false;
+    hint.className = 'section-note';
+    hint.textContent = 'Scannt QR-Codes direkt mit der Kamera dieses Geraets, als Alternative zu einem externen Scanner.';
+    const enabled = localStorage.getItem(CAMERA_PREF_KEY) === '1';
+    toggle.checked = enabled;
+    btn.style.display = enabled ? 'block' : 'none';
+    if (!enabled) stopCameraScan();
+  }
   function openScanOverlay() {
     const overlay = document.getElementById('scan-overlay');
     if (!overlay) return;
     resetScanState();
+    applyCameraToggleState();
     overlay.classList.add('show');
     setTimeout(() => { const inp = document.getElementById('scan-input'); if (inp) inp.focus(); }, 50);
   }
@@ -2944,6 +3425,7 @@ function ldWireProps(el) {
     const overlay = document.getElementById('scan-overlay');
     if (!overlay) return;
     overlay.classList.remove('show');
+    stopCameraScan();
     resetScanState();
   }
 
@@ -2957,6 +3439,20 @@ function ldWireProps(el) {
     if (!fab || !overlay || !input) return;
 
     fab.addEventListener('click', openScanOverlay);
+    const cameraToggle = document.getElementById('scan-camera-toggle');
+    const cameraBtn = document.getElementById('scan-camera-btn');
+    if (cameraToggle) {
+      cameraToggle.addEventListener('change', () => {
+        localStorage.setItem(CAMERA_PREF_KEY, cameraToggle.checked ? '1' : '0');
+        applyCameraToggleState();
+      });
+    }
+    if (cameraBtn) {
+      cameraBtn.addEventListener('click', () => {
+        if (html5QrCodeInstance) stopCameraScan(); else startCameraScan();
+      });
+    }
+    applyCameraToggleState();
     closeBtn.addEventListener('click', closeScanOverlay);
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) { closeScanOverlay(); return; }
@@ -2990,6 +3486,16 @@ function ldWireProps(el) {
   <div class="assign-box">
     <h3>Scan-Modus</h3>
     <p class="slot-label">Spule und Lagerplatz in beliebiger Reihenfolge scannen.</p>
+    <p class="section-note" style="margin-top:-.25rem;margin-bottom:.6rem;">Neuer Filament-QR: Spule wird automatisch angelegt und beim naechsten Platz-Scan automatisch zugewiesen (kein Klick noetig). Vorhandene Spule (Spulen-QR): Zuweisung muss ueber den Button unten bestaetigt werden.</p>
+    <div id="scan-camera-box" style="margin-bottom:.75rem;padding:.6rem .75rem;border:1px solid var(--border);border-radius:8px;background:#0b1220;">
+      <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;">
+        <input type="checkbox" id="scan-camera-toggle">
+        <span>Kamera-Scan aktivieren</span>
+      </label>
+      <div id="scan-camera-hint" class="section-note" style="margin-top:.35rem;margin-bottom:0;"></div>
+      <button class="btn secondary" id="scan-camera-btn" style="display:none;margin-top:.5rem;width:100%;">Kamera scannen</button>
+      <div id="scan-camera-reader" style="display:none;margin-top:.5rem;border-radius:8px;overflow:hidden;"></div>
+    </div>
     <input type="text" id="scan-input" autocomplete="off" style="width:100%;box-sizing:border-box;padding:.5rem .6rem;border-radius:8px;border:1px solid var(--border);background:#0b1220;color:var(--text);font-size:.85rem;margin-bottom:.75rem;">
     <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem;">
       <div style="display:flex;justify-content:space-between;gap:.5rem;">
